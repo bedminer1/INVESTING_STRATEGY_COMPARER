@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"text/tabwriter"
+	"time"
 
 	"github.com/bedminer1/SnP/db"
 )
@@ -159,8 +160,11 @@ func Mattress(r db.Records) Investor {
 	return iv
 }
 
-func CompareStrats(out io.Writer, currSnPPrice float64, investors []Investor) {
+func CompareStrats(out io.Writer, currSnPPrice float64, investors []Investor, start, end time.Time) {
+	fmt.Fprintf(out, "Performance of Strategies Backtested from %s to %s\n", start.Format("02/01/2006"), end.Format("02/01/2006"))
 	fmt.Fprintln(out, "Number of Investors:", len(investors))
+	fmt.Fprintln(out)
+
 
 	w := tabwriter.NewWriter(out, 0, 0, 2, ' ', tabwriter.Debug)
 	fmt.Fprintln(w, "Strategy\tNet Worth\tSnP Value\tReverses Value\t")
