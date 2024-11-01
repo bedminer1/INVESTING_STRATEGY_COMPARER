@@ -58,7 +58,10 @@ func VA(targetGrowth float64, r db.Records) Investor {
 	investmentMade := false
 	monthsCount := 1
 
-	for i, record := range r[2:] {
+	for i, record := range r {
+		if i < 2 {
+			continue
+		}
 		if i+1 < len(r) && record.Date.Month() != r[i+1].Date.Month() {
 			investmentMade = false
 		}
@@ -102,7 +105,10 @@ func DynamicVA(targetGrowth float64, r db.Records, cfg DynamicVAConfig) Investor
 	monthsCount := 1
 	targetSnPValue := float64(0)
 
-	for i, record := range r[2:] {
+	for i, record := range r {
+		if i < 2 {
+			continue
+		}
 		if i+1 < len(r) && record.Date.Month() != r[i+1].Date.Month() {
 			investmentMade = false
 		}
@@ -140,7 +146,70 @@ func DynamicVA(targetGrowth float64, r db.Records, cfg DynamicVAConfig) Investor
 	return iv
 }
 
-// Strat 4: Mattress Stuffer
+// calculateAverage computes the average of a slice of float64 numbers
+func calculateAverage(prices []float64) float64 {
+	sum := 0.0
+	for _, price := range prices {
+		sum += price
+	}
+	return sum / float64(len(prices))
+}
+
+// Strat 4: Buy Low Sell High
+// Noted that this strategy has potential for good performance but requires very precise tuning, like DVA
+// Small tweaks in the buy, sell threshold and windowsize lead to big differences in performance
+func BuyLowSellHigh(r db.Records) Investor {
+	iv := Investor{Strategy: "BuyLowSellHigh", Reserves: 0} // Starting with a reserve balance
+	windowSize := 20
+	buyThreshold := 1.00
+	sellThreshold := 1.03
+	investmentMade := false
+
+	var recentPrices []float64
+
+	for i, record := range r {
+		// Add the current price to recent prices
+		recentPrices = append(recentPrices, record.Price)
+		if len(recentPrices) > windowSize {
+			recentPrices = recentPrices[1:] // Keep only the last `windowSize` prices
+		}
+
+		// Calculate the moving average of recent prices
+		if len(recentPrices) < windowSize {
+			continue // Not enough data points for the window yet
+		}
+
+		if i+1 < len(r) && record.Date.Month() != r[i+1].Date.Month() {
+			investmentMade = false
+		}
+		if investmentMade {
+			continue
+		}
+
+		investmentMade = true
+
+		avgPrice := calculateAverage(recentPrices)
+		iv.Reserves += 1000
+
+		// Buy condition
+		if record.Price < buyThreshold*avgPrice {
+			sharesToBuy := iv.Reserves / record.Price
+			iv.Shares += sharesToBuy
+			iv.Reserves -= sharesToBuy * record.Price
+		}
+
+		// Sell
+		if record.Price > sellThreshold*avgPrice {
+			proceeds := iv.Shares * record.Price
+			iv.Reserves += proceeds
+			iv.Shares = 0
+		}
+	}
+
+	return iv
+}
+
+// Strat 5: Mattress Stuffer
 func Mattress(r db.Records) Investor {
 	iv := Investor{Strategy: "Mattress"}
 	investmentMade := false
@@ -161,19 +230,20 @@ func Mattress(r db.Records) Investor {
 }
 
 func CompareStrats(out io.Writer, currSnPPrice float64, investors []Investor, start, end time.Time) {
-	fmt.Fprintf(out, "Performance of Strategies Backtested from %s to %s\n", start.Format("02/01/2006"), end.Format("02/01/2006"))
+	fmt.Fprintf(out, "Backtested from %s to %s\n", start.Format("2 Jan 2006"), end.Format("2 Jan 2006"))
 	fmt.Fprintln(out, "Number of Investors:", len(investors))
 	fmt.Fprintln(out)
 
 
 	w := tabwriter.NewWriter(out, 0, 0, 2, ' ', tabwriter.Debug)
-	fmt.Fprintln(w, "Strategy\tNet Worth\tSnP Value\tReverses Value\t")
+	fmt.Fprintln(w, "Strategy\tNet Worth\tSnP Value\tNo of Shares\tReverses Value\t")
 
 	for _, investor := range investors {
-		fmt.Fprintf(w, "%s\t%.2f\t%.2f\t%.2f\t\n",
+		fmt.Fprintf(w, "%s\t%.2f\t%.2f\t%.2f\t%.2f\t\n",
 			investor.Strategy,
 			investor.NetWorth(currSnPPrice),
 			investor.SnPValue(currSnPPrice),
+			investor.Shares,
 			investor.Reserves,
 		)
 	}

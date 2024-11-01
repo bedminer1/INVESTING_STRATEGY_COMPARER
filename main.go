@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	start, _ := time.Parse("2006/01/02", "2020/01/01")
+	start, _ := time.Parse("2006/01/02", "2021/01/01")
 	end, _ := time.Parse("2006/01/02", "2025/01/01")
 
 	r := db.Records{}
@@ -25,13 +25,14 @@ func main() {
 		IncreasingMultiplier: 2.31,
 	}
 	DynamicVAInvestor := strats.DynamicVA(1000, r, DVAcfg)
+	BuyLowSellHighInvestor := strats.BuyLowSellHigh(r)
 	MattressInvestor := strats.Mattress(r)
 
 	// Compare
 	mostRecentPrice := r[len(r)-1].Price
 	strats.CompareStrats(
 		os.Stdout, mostRecentPrice,
-		[]strats.Investor{DCAInvestor, VAInvestor, DynamicVAInvestor, MattressInvestor},
+		[]strats.Investor{DCAInvestor, VAInvestor, DynamicVAInvestor, BuyLowSellHighInvestor, MattressInvestor},
 		r[0].Date, r[len(r)-1].Date,
 	)
 }
