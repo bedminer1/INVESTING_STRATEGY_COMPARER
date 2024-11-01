@@ -87,8 +87,15 @@ func VA(targetGrowth float64, r db.Records) Investor {
 	return iv
 }
 
+type DynamicVAConfig struct {
+	BottomRatio          float64
+	TopRatio             float64
+	ReducingMultiplier   float64
+	IncreasingMultiplier float64
+}
+
 // Strat 3: VA where targetGrowth scales with reserves
-func DynamicVA(targetGrowth float64, r db.Records) Investor {
+func DynamicVA(targetGrowth float64, r db.Records, cfg DynamicVAConfig) Investor {
 	iv := Investor{Strategy: "DynamicVA", Reserves: 2000}
 	investmentMade := false
 	monthsCount := 1
@@ -119,12 +126,11 @@ func DynamicVA(targetGrowth float64, r db.Records) Investor {
 
 		// Adjust target growth based on cash buffer ratio
 		cashBufferRatio := iv.Reserves / targetGrowth
-		if cashBufferRatio < 4 {
-			targetGrowth = max(targetGrowth * 0.9, 1000) // reduce growth
-		} else if cashBufferRatio > 5.9 {
-			targetGrowth *= 2.3 // increase growth
+		if cashBufferRatio < cfg.BottomRatio {
+			targetGrowth = max(targetGrowth*cfg.ReducingMultiplier, 1000) // reduce growth
+		} else if cashBufferRatio > cfg.TopRatio {
+			targetGrowth *= cfg.IncreasingMultiplier // increase growth
 		}
-
 
 		investmentMade = true
 		monthsCount++
@@ -160,11 +166,11 @@ func CompareStrats(out io.Writer, currSnPPrice float64, investors []Investor) {
 	fmt.Fprintln(w, "Strategy\tNet Worth\tSnP Value\tReverses Value\t")
 
 	for _, investor := range investors {
-		fmt.Fprintf(w, "%s\t%.2f\t%.2f\t%.2f\t\n", 
-		investor.Strategy, 
-		investor.NetWorth(currSnPPrice),
-		investor.SnPValue(currSnPPrice),
-		investor.Reserves,
+		fmt.Fprintf(w, "%s\t%.2f\t%.2f\t%.2f\t\n",
+			investor.Strategy,
+			investor.NetWorth(currSnPPrice),
+			investor.SnPValue(currSnPPrice),
+			investor.Reserves,
 		)
 	}
 	fmt.Fprintln(w)

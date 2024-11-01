@@ -17,7 +17,14 @@ func main() {
 
 	DCAInvestor := strats.DCA(1000, r)
 	VAInvestor := strats.VA(1000, r)
-	DynamicVAInvestor := strats.DynamicVA(1000, r)
+
+	DVAcfg := strats.DynamicVAConfig {
+		BottomRatio:4,
+		TopRatio: 5.9,
+		ReducingMultiplier: 0.9,
+		IncreasingMultiplier: 2.3,
+	}
+	DynamicVAInvestor := strats.DynamicVA(1000, r, DVAcfg)
 	MattressInvestor := strats.Mattress(r)
 
 	// Compare
