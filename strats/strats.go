@@ -87,7 +87,53 @@ func VA(targetGrowth float64, r db.Records) Investor {
 	return iv
 }
 
-// Strat 3: Mattress Stuffer
+// Strat 3: VA where targetGrowth scales with reserves
+func DynamicVA(targetGrowth float64, r db.Records) Investor {
+	iv := Investor{Strategy: "DynamicVA", Reserves: 2000}
+	investmentMade := false
+	monthsCount := 1
+	targetSnPValue := float64(0)
+
+	for i, record := range r[2:] {
+		if i+1 < len(r) && record.Date.Month() != r[i+1].Date.Month() {
+			investmentMade = false
+		}
+		if investmentMade {
+			continue
+		}
+
+		iv.Reserves += 1000
+		// calculate delta from target
+		snpv := iv.SnPValue(record.Price)
+		targetSnPValue += targetGrowth
+		amountToMove := targetSnPValue - snpv
+
+		// check if enough
+		if amountToMove <= iv.Reserves {
+			iv.Reserves -= amountToMove // also works for adding to it
+			iv.Shares += amountToMove / record.Price
+		} else {
+			iv.Shares += iv.Reserves / record.Price
+			iv.Reserves = 0
+		}
+
+		// Adjust target growth based on cash buffer ratio
+		cashBufferRatio := iv.Reserves / targetGrowth
+		if cashBufferRatio < 4 {
+			targetGrowth = max(targetGrowth * 0.9, 1000) // reduce growth
+		} else if cashBufferRatio > 5.9 {
+			targetGrowth *= 2.3 // increase growth
+		}
+
+
+		investmentMade = true
+		monthsCount++
+	}
+
+	return iv
+}
+
+// Strat 4: Mattress Stuffer
 func Mattress(r db.Records) Investor {
 	iv := Investor{Strategy: "Mattress"}
 	investmentMade := false
