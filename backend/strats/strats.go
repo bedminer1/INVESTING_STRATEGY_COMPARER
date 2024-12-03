@@ -4,23 +4,9 @@ import (
 	"fmt"
 	"io"
 	"text/tabwriter"
-	"time"
 
-	"github.com/bedminer1/SnP/db"
+	"github.com/bedminer1/SnP/models"
 )
-
-type WeeklyRecord struct {
-	Time     time.Time
-	NetWorth float64
-	SnpValue float64
-	Shares   float64
-	Reserves float64
-}
-
-type WeeklyRecords struct {
-	Strategy string
-	Records  []WeeklyRecord
-}
 
 // NetWorth calculates and returns the NetWorth of the Investor
 func CalculateNetWorth(currSnPPrice, shares, reserves float64) float64 {
@@ -35,9 +21,9 @@ func CalculateSnPValue(currSnPPrice, shares, reserves float64) float64 {
 }
 
 // Strat 1: DCA, 1000 per month
-func DCA(amount float64, priceRecords db.Records) []WeeklyRecord {
+func DCA(amount float64, priceRecords models.Records) []models.WeeklyRecord {
 	investmentMade := false
-	records := []WeeklyRecord{}
+	records := []models.WeeklyRecord{}
 	shares := float64(0)
 
 	for i, record := range priceRecords {
@@ -51,8 +37,8 @@ func DCA(amount float64, priceRecords db.Records) []WeeklyRecord {
 		shares += amount / record.Price
 		investmentMade = true
 
-		records = append(records, WeeklyRecord{
-			Time: record.Date,
+		records = append(records, models.WeeklyRecord{
+			Time:     record.Date,
 			NetWorth: CalculateNetWorth(record.Price, shares, 0),
 			SnpValue: CalculateSnPValue(record.Price, shares, 0),
 			Shares:   shares,
@@ -64,10 +50,10 @@ func DCA(amount float64, priceRecords db.Records) []WeeklyRecord {
 }
 
 // Strat 2: Value Averaging
-func VA(targetGrowth float64, r db.Records) []WeeklyRecord {
+func VA(targetGrowth float64, r models.Records) []models.WeeklyRecord {
 	reserves := 2000.0
 	shares := 0.0
-	records := []WeeklyRecord{}
+	records := []models.WeeklyRecord{}
 	investmentMade := false
 	monthsCount := 1
 
@@ -96,8 +82,8 @@ func VA(targetGrowth float64, r db.Records) []WeeklyRecord {
 			reserves = 0
 		}
 
-		records = append(records, WeeklyRecord{
-			Time: record.Date,
+		records = append(records, models.WeeklyRecord{
+			Time:     record.Date,
 			NetWorth: CalculateNetWorth(record.Price, shares, reserves),
 			SnpValue: CalculateSnPValue(record.Price, shares, reserves),
 			Shares:   shares,
@@ -118,10 +104,10 @@ type DynamicVAConfig struct {
 }
 
 // Strat 3: Dynamic Value Averaging
-func DynamicVA(targetGrowth float64, r db.Records, cfg DynamicVAConfig) []WeeklyRecord {
+func DynamicVA(targetGrowth float64, r models.Records, cfg DynamicVAConfig) []models.WeeklyRecord {
 	reserves := 2000.0
 	shares := 0.0
-	records := []WeeklyRecord{}
+	records := []models.WeeklyRecord{}
 	targetSnPValue := 0.0
 	investmentMade := false
 
@@ -156,8 +142,8 @@ func DynamicVA(targetGrowth float64, r db.Records, cfg DynamicVAConfig) []Weekly
 			targetGrowth *= cfg.IncreasingMultiplier
 		}
 
-		records = append(records, WeeklyRecord{
-			Time: record.Date,
+		records = append(records, models.WeeklyRecord{
+			Time:     record.Date,
 			NetWorth: CalculateNetWorth(record.Price, shares, reserves),
 			SnpValue: CalculateSnPValue(record.Price, shares, reserves),
 			Shares:   shares,
@@ -180,10 +166,10 @@ func calculateAverage(prices []float64) float64 {
 }
 
 // Strat 4: Buy Low, Sell High
-func BuyLowSellHigh(r db.Records) []WeeklyRecord {
+func BuyLowSellHigh(r models.Records) []models.WeeklyRecord {
 	reserves := 0.0
 	shares := 0.0
-	records := []WeeklyRecord{}
+	records := []models.WeeklyRecord{}
 	windowSize := 20
 	buyThreshold := 1.00
 	sellThreshold := 1.03
@@ -225,8 +211,8 @@ func BuyLowSellHigh(r db.Records) []WeeklyRecord {
 			shares = 0
 		}
 
-		records = append(records, WeeklyRecord{
-			Time: record.Date,
+		records = append(records, models.WeeklyRecord{
+			Time:     record.Date,
 			NetWorth: CalculateNetWorth(record.Price, shares, reserves),
 			SnpValue: CalculateSnPValue(record.Price, shares, reserves),
 			Shares:   shares,
@@ -238,9 +224,9 @@ func BuyLowSellHigh(r db.Records) []WeeklyRecord {
 }
 
 // Strat 5: Mattress
-func Mattress(r db.Records) []WeeklyRecord {
+func Mattress(r models.Records) []models.WeeklyRecord {
 	reserves := 0.0
-	records := []WeeklyRecord{}
+	records := []models.WeeklyRecord{}
 	investmentMade := false
 
 	for i, record := range r {
@@ -254,8 +240,8 @@ func Mattress(r db.Records) []WeeklyRecord {
 		reserves += 1000
 		investmentMade = true
 
-		records = append(records, WeeklyRecord{
-			Time: record.Date,
+		records = append(records, models.WeeklyRecord{
+			Time:     record.Date,
 			NetWorth: reserves,
 			SnpValue: 0,
 			Shares:   0,
@@ -267,7 +253,7 @@ func Mattress(r db.Records) []WeeklyRecord {
 }
 
 // Prints it out using tabwriter
-func CompareStrats(out io.Writer, priceRecords db.Records, results []WeeklyRecords) {
+func CompareStrats(out io.Writer, priceRecords models.Records, results []models.WeeklyRecords) {
 	fmt.Fprintln(out, "Number of Strategies:", len(results))
 	fmt.Fprintln(out)
 

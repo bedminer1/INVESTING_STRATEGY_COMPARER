@@ -42,6 +42,6 @@
 
 </script>
 
-<div class="container h-full w-full flex justify-center items-center">
+<div class="container h-screen w-full flex justify-center items-center px-10">
 	<LineChart {...{ stats, label: "Strategy" }}></LineChart>
 </div>

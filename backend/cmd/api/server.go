@@ -5,7 +5,11 @@ import "github.com/labstack/echo/v4"
 func main() {
 	e := echo.New()
 
-	e.GET("/", handleGet)
+	db := InitDB("../../price_data.db")
+	h := NewHandler(db)
+
+	e.GET("/strategies", h.handleGetStrategies)
+	e.GET("/prices", h.handleGetPrices)
 
 	e.Logger.Fatal(e.Start(":4000"))
 }

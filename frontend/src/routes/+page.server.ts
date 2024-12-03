@@ -2,7 +2,7 @@
 
 export const load = async () => {
     try {   
-        const response = await fetch("http://localhost:4000/?start=2014_01_01&end=2024_01_01")
+        const response = await fetch("http://localhost:4000/strategies?start=2014_01_01&end=2024_01_01")
         if (!response.ok) {
             throw new Error(`Error fetching data: ${response.statusText}`)
         }

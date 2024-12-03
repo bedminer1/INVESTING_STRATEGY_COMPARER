@@ -1,39 +1,82 @@
 package main
 
 import (
-	"os"
 	"time"
 
-	"github.com/bedminer1/SnP/db"
+	"github.com/bedminer1/SnP/models"
 	"github.com/bedminer1/SnP/strats"
 	"github.com/labstack/echo/v4"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 type envelope map[string]interface{}
 
-func handleGet(c echo.Context) error {
+type Handler struct {
+	DB *gorm.DB
+}
+
+func InitDB(fileName string) *gorm.DB {
+	db, err := gorm.Open(sqlite.Open(fileName), &gorm.Config{})
+	if err != nil {
+		panic("failed to connect to db")
+	}
+
+	// migrate schema
+	if err := db.AutoMigrate(&models.Record{}); err != nil {
+		panic("failed to migrate schema")
+	}
+
+	return db
+}
+
+func NewHandler(db *gorm.DB) *Handler {
+	return &Handler{DB: db}
+}
+
+func (h *Handler) fetchPrices(start, end time.Time) *models.Records {
+	priceRecords := &models.Records{}
+	h.DB.Where("date BETWEEN ? AND ?", start, end).Find(&priceRecords)
+
+	return priceRecords
+}
+
+func (h *Handler) handleGetPrices(c echo.Context) error {
 	startInput := c.QueryParam("start")
 	endInput := c.QueryParam("end")
-
 	if startInput == "" {
 		startInput = "2014_01_01"
 	}
 	if endInput == "" {
 		endInput = "2025_01_01"
 	}
-
 	start, _ := time.Parse("2006_01_02", startInput)
 	end, _ := time.Parse("2006_01_02", endInput)
 
-	priceRecords := db.Records{}
-	priceRecords.Get(start, end, "../../price_data.db")
+	priceRecords := *h.fetchPrices(start, end)
+	return c.JSON(200, envelope{"price_data": priceRecords})
+}
+
+func (h *Handler) handleGetStrategies(c echo.Context) error {
+	startInput := c.QueryParam("start")
+	endInput := c.QueryParam("end")
+	if startInput == "" {
+		startInput = "2014_01_01"
+	}
+	if endInput == "" {
+		endInput = "2025_01_01"
+	}
+	start, _ := time.Parse("2006_01_02", startInput)
+	end, _ := time.Parse("2006_01_02", endInput)
+
+	priceRecords := *h.fetchPrices(start, end)
 
 	// Calculate strategy performance using given priceRecords
-	DCARecords := strats.WeeklyRecords{
+	DCARecords := models.WeeklyRecords{
 		Strategy: "DCA",
 		Records:  strats.DCA(1000, priceRecords),
 	}
-	VARecords := strats.WeeklyRecords{
+	VARecords := models.WeeklyRecords{
 		Strategy: "VA",
 		Records:  strats.VA(1000, priceRecords),
 	}
@@ -44,28 +87,26 @@ func handleGet(c echo.Context) error {
 		ReducingMultiplier:   0.9,
 		IncreasingMultiplier: 2.31,
 	}
-	DynamicVARecords := strats.WeeklyRecords{
+	DynamicVARecords := models.WeeklyRecords{
 		Strategy: "DynamicVA",
 		Records:  strats.DynamicVA(1000, priceRecords, DVAcfg),
 	}
-	BuyLowSellHighRecords := strats.WeeklyRecords{
+	BuyLowSellHighRecords := models.WeeklyRecords{
 		Strategy: "BuyLowSellHigh",
 		Records:  strats.BuyLowSellHigh(priceRecords),
 	}
-	MattressRecords := strats.WeeklyRecords{
+	MattressRecords := models.WeeklyRecords{
 		Strategy: "Mattress",
 		Records:  strats.Mattress(priceRecords),
 	}
 
-	results := []strats.WeeklyRecords{
+	results := []models.WeeklyRecords{
 		DCARecords,
 		VARecords,
 		DynamicVARecords,
 		BuyLowSellHighRecords,
 		MattressRecords,
 	}
-
-	strats.CompareStrats(os.Stdout, priceRecords, results)
 
 	return c.JSON(200, envelope{"results": results})
 }

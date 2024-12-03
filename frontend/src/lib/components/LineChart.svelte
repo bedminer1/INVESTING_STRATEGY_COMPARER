@@ -37,7 +37,7 @@
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: label,
+                            text: "Net Worth (USD)",
                         }
                     },
                     x: {
