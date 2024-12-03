@@ -1,15 +1,47 @@
-<!-- YOU CAN DELETE EVERYTHING IN THIS PAGE -->
+<script lang="ts">
+	import LineChart from '$lib/components/LineChart.svelte'
 
-<div class="container h-full mx-auto flex justify-center items-center">
-	<div class="space-y-5">
-		<h1 class="h1">Let's get cracking bones!</h1>
-		<p>Start by exploring:</p>
-		<ul>
-			<li><code class="code">/src/routes/+layout.svelte</code> - barebones layout</li>
-			<li><code class="code">/src/app.postcss</code> - app wide css</li>
-			<li>
-				<code class="code">/src/routes/+page.svelte</code> - this page, you can replace the contents
-			</li>
-		</ul>
-	</div>
+	export let data
+	let results = data?.results || []
+
+	function getNW(results: WeeklyRecords[]): number[][] {
+		let res: number[][] = []
+
+		for (const recordGroup of results) {
+			if (!Array.isArray(recordGroup.Records)) {
+				console.error("Invalid record structure: ", recordGroup.Records)
+				continue
+			}
+
+			let strategyResults: number[] = []
+			for (const record of recordGroup.Records) {
+				strategyResults.push(record.NetWorth)
+			}
+			res.push(strategyResults)
+		}
+
+		return res
+	}
+
+	let nwValues = getNW(results)
+
+	const colors = [
+		{ border: 'rgba(75, 192, 192, 1)', background: 'rgba(75, 192, 192, 0.2)' },
+		{ border: 'rgba(255, 99, 132, 1)', background: 'rgba(255, 99, 132, 0.2)' },
+		{ border: 'rgba(255, 165, 0, 1)', background: 'rgba(255, 165, 0, 0.2)' },
+		{ border: 'rgba(54, 162, 235, 1)', background: 'rgba(54, 162, 235, 0.2)' },
+		{ border: 'rgba(153, 102, 255, 1)', background: 'rgba(153, 102, 255, 0.2)' },
+	]
+
+	let stats = results.map((result, index) => ({
+		label: result.Strategy, // Use strategy name as the label
+		data: nwValues[index],
+		borderColor: colors[index % colors.length].border,
+		backgroundColor: colors[index % colors.length].background
+	}))
+
+</script>
+
+<div class="container h-full w-full flex justify-center items-center">
+	<LineChart {...{ stats, label: "Strategy" }}></LineChart>
 </div>
