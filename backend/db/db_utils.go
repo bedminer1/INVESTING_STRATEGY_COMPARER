@@ -2,11 +2,8 @@ package db
 
 import (
 	"encoding/csv"
-	"fmt"
-	"io"
 	"os"
 	"strconv"
-	"text/tabwriter"
 	"time"
 
 	"gorm.io/driver/sqlite"
@@ -20,8 +17,8 @@ type Record struct {
 
 type Records []Record
 
-func (r *Records) Get(start, end time.Time) {
-	db, err := gorm.Open(sqlite.Open("price_data.db"), &gorm.Config{})
+func (r *Records) Get(start, end time.Time, fileName string) {
+	db, err := gorm.Open(sqlite.Open(fileName), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect to db")
 	}
@@ -64,27 +61,4 @@ func GetCSV(filename string) Records {
 	}
 
 	return res
-}
-
-func (r Records) List(out io.Writer, limit int) {
-	fmt.Fprintln(out, "Number of Records Fetched:", len(r))
-
-	w := tabwriter.NewWriter(out, 0, 0, 2, ' ', tabwriter.Debug)
-	fmt.Fprintln(w, "Date\tPrice\t")
-
-	if limit > len(r)-1 {
-		limit = len(r)
-	}
-
-	if limit == 0 {
-		fmt.Fprintln(out)
-		return
-	}
-
-	for _, record := range r[:limit] {
-		fmt.Fprintf(w, "%s\t%.4f\t\n", record.Date.Format("2006/01/02"), record.Price)
-	}
-	fmt.Fprintln(w)
-
-	w.Flush()
 }
