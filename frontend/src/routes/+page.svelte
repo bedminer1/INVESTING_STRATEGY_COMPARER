@@ -4,6 +4,17 @@
 	export let data
 	let results = data?.results || []
 
+	let start = data.start || '2014-01-01'
+    let end = data.end || '2024-01-01'
+
+    function handleSubmit(event: Event) {
+        event.preventDefault()
+		const formattedStart = start.replace(/-/g, '_')
+        const formattedEnd = end.replace(/-/g, '_')
+        const params = new URLSearchParams({ start: formattedStart, end: formattedEnd })
+        window.location.search = params.toString()
+    }
+
 	function getNW(results: WeeklyRecords[]): number[][] {
 		let res: number[][] = []
 
@@ -59,6 +70,18 @@
 
 </script>
 
-<div class="container h-screen w-full flex justify-center items-center px-10">
+<div class="container h-screen w-full flex flex-col justify-center items-center px-10">
+	<form on:submit={handleSubmit} class="flex flex-col ">
+		<label>
+			Start Date:
+			<input class="input" type="date" bind:value={start} />
+		</label>
+		<label>
+			End Date:
+			<input class="input" type="date" bind:value={end} />
+		</label>
+		<button class="btn" type="submit">Fetch Data</button>
+	</form>
+
 	<LineChart {...{ stats, label: "" , xAxisLabels: monthsValues}}></LineChart>
 </div>
