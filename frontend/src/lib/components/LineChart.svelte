@@ -5,7 +5,7 @@
     // Register necessary Chart.js components
     Chart.register(LineController, LineElement, PointElement, LinearScale, Title, CategoryScale, Tooltip, Legend);
 
-    let { stats, label }: { stats: DataSet[], label: string} = $props()
+    let { stats, label, xAxisLabels }: { stats: DataSet[], label: string, xAxisLabels: string[]} = $props()
 
     let chart: Chart | null = null
     Chart.defaults.color = 'rgb(250,255,255)'
@@ -21,7 +21,7 @@
         chart = new Chart(chartCanvas, {
             type: 'line',
             data: {
-                labels: stats[0].data.map((_, i) => `Month ${i + 1}`),
+                labels: xAxisLabels,
                 datasets: stats.map(stat => ({
                     label: stat.label + " " + label,
                     data: stat.data,

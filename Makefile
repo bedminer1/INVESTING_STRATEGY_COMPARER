@@ -1,7 +1,7 @@
-.PHONY: frontend/run
-frontend/run:
+.PHONY: frontend
+frontend:
 	@cd frontend && bun run dev & open http://localhost:5173
 
-.PHONY: backend/run
-backend/run:
+.PHONY: backend
+backend:
 	@cd backend/cmd/api && go run .

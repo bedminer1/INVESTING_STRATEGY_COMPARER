@@ -73,11 +73,11 @@ func (h *Handler) handleGetStrategies(c echo.Context) error {
 
 	// Calculate strategy performance using given priceRecords
 	DCARecords := models.WeeklyRecords{
-		Strategy: "DCA",
+		Strategy: "Dollar Cost Averaging",
 		Records:  strats.DCA(1000, priceRecords),
 	}
 	VARecords := models.WeeklyRecords{
-		Strategy: "VA",
+		Strategy: "Value Averaging",
 		Records:  strats.VA(1000, priceRecords),
 	}
 
@@ -88,11 +88,11 @@ func (h *Handler) handleGetStrategies(c echo.Context) error {
 		IncreasingMultiplier: 2.31,
 	}
 	DynamicVARecords := models.WeeklyRecords{
-		Strategy: "DynamicVA",
+		Strategy: "Dynamic Value Averaging",
 		Records:  strats.DynamicVA(1000, priceRecords, DVAcfg),
 	}
 	BuyLowSellHighRecords := models.WeeklyRecords{
-		Strategy: "BuyLowSellHigh",
+		Strategy: "Buy Low Sell High",
 		Records:  strats.BuyLowSellHigh(priceRecords),
 	}
 	MattressRecords := models.WeeklyRecords{

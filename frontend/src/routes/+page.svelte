@@ -23,7 +23,24 @@
 		return res
 	}
 
+	function formatDateToCustomFormat(dateString: string) {
+		const date = new Date(dateString)
+		const options: Intl.DateTimeFormatOptions = { month: 'short', year: '2-digit' }
+		return new Intl.DateTimeFormat('en-US', options).format(date).replace(' ', " '")
+	}
+
+	function getDates(results: WeeklyRecords[]): string[] {
+		let res: string[] = []
+
+		for (const record of results[0].Records) {
+				res.push(formatDateToCustomFormat(record.Time))
+		}
+
+		return res
+	}
+
 	let nwValues = getNW(results)
+	let monthsValues = getDates(results)
 
 	const colors = [
 		{ border: 'rgba(75, 192, 192, 1)', background: 'rgba(75, 192, 192, 0.2)' },
@@ -43,5 +60,5 @@
 </script>
 
 <div class="container h-screen w-full flex justify-center items-center px-10">
-	<LineChart {...{ stats, label: "Strategy" }}></LineChart>
+	<LineChart {...{ stats, label: "" , xAxisLabels: monthsValues}}></LineChart>
 </div>
