@@ -1,8 +1,10 @@
 
 
-export const load = async () => {
+export const load = async ({ url }) => {
     try {   
-        const response = await fetch("http://localhost:4000/strategies?start=2014_01_01&end=2024_01_01")
+        const start = url.searchParams.get("start") || "2014_01_01"
+        const end = url.searchParams.get("end") || "2024_01_01"
+        const response = await fetch(`http://localhost:4000/strategies?start=${start}&end=${end}`)
         if (!response.ok) {
             throw new Error(`Error fetching data: ${response.statusText}`)
         }

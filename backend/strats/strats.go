@@ -51,16 +51,13 @@ func DCA(amount float64, priceRecords models.Records) []models.WeeklyRecord {
 
 // Strat 2: Value Averaging
 func VA(targetGrowth float64, r models.Records) []models.WeeklyRecord {
-	reserves := 2000.0
+	reserves := 0.0
 	shares := 0.0
 	records := []models.WeeklyRecord{}
 	investmentMade := false
 	monthsCount := 1
 
 	for i, record := range r {
-		if i < 2 {
-			continue
-		}
 		if i+1 < len(r) && record.Date.Month() != r[i+1].Date.Month() {
 			investmentMade = false
 		}
@@ -105,16 +102,13 @@ type DynamicVAConfig struct {
 
 // Strat 3: Dynamic Value Averaging
 func DynamicVA(targetGrowth float64, r models.Records, cfg DynamicVAConfig) []models.WeeklyRecord {
-	reserves := 2000.0
+	reserves := 0.0
 	shares := 0.0
 	records := []models.WeeklyRecord{}
 	targetSnPValue := 0.0
 	investmentMade := false
 
 	for i, record := range r {
-		if i < 2 {
-			continue
-		}
 		if i+1 < len(r) && record.Date.Month() != r[i+1].Date.Month() {
 			investmentMade = false
 		}
