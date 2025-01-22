@@ -40,7 +40,7 @@
         if (records[recordIndex].Date <= currDate) {
             recordIndex++
             displayedRecords.push(records[recordIndex])
-            console.log(displayedRecords.slice(-3), currDate)
+            console.log(displayedRecords.slice(-3))
         }
     }
 
@@ -50,6 +50,11 @@
         }
         currDate.setDate(currDate.getDate() - 1)
         curr = formatDate(currDate)
+        if (recordIndex > 0 && records[recordIndex - 1].Date > currDate) {
+            recordIndex--
+            displayedRecords.pop()
+            console.log(displayedRecords.slice(-3))
+        }
     }
 
 </script>
