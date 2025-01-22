@@ -1,5 +1,3 @@
-
-
 export const load = async ({ url }) => {
     try {   
         const start = url.searchParams.get("start") || "2014_01_01"

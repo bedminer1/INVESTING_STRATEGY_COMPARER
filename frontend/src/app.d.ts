@@ -27,3 +27,8 @@ interface WeeklyRecords {
 	Strategy: string
 	Records: WeeklyRecord[]
 }
+
+interface PriceRecord {
+	Price: number
+	Date: string | Date
+}

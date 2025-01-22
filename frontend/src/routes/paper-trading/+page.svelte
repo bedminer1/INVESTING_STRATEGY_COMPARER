@@ -1,9 +1,28 @@
 <script lang="ts">
-    const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
-    const start = new Date(2001, 0, 13)
-    const end = new Date(2001, 0, 21)
-    let currDate = new Date(2001, 0, 13)
-    let curr = formatDate(currDate)
+    export let data: {
+        records: PriceRecord[]
+    }
+   const records = data.records
+   let displayedRecords: PriceRecord[] = []
+   records.forEach(record => {
+    record.Date = new Date(record.Date)
+   })
+   let recordIndex = 0
+   
+   const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
+   const start = new Date(2015, 0, 27)
+   const end = new Date(2021, 1, 2)
+   let currDate = new Date(2015, 0, 27)
+   let curr = formatDate(currDate)
+   
+
+    for (let record of records) {
+        recordIndex++
+        if (record.Date > currDate) {
+            break
+        }
+        displayedRecords.push(record)
+    }
 
     function formatDate(date: Date): string {
         const day = String(date.getDate()).padStart(2, "0")
@@ -13,24 +32,35 @@
     }
 
     function nextDay() {
-        if (currDate < end) {
-            currDate.setDate(currDate.getDate() + 1)
-            curr = formatDate(currDate)
+        if (currDate >= end) {
+            return
+        }
+        currDate.setDate(currDate.getDate() + 1)
+        curr = formatDate(currDate)
+        if (records[recordIndex+1].Date <= currDate) {
+            displayedRecords.push(records[recordIndex+1])
+            recordIndex++
+            console.log(displayedRecords.slice(-3))
         }
     }
 
     function previousDay() {
-        if (currDate > start) {
-            currDate.setDate(currDate.getDate() - 1)
-            curr = formatDate(currDate)
+        if (currDate <= start) {
+            return
         }
+        currDate.setDate(currDate.getDate() - 1)
+        curr = formatDate(currDate)
     }
+
 </script>
 
 <div class="w-full flex flex-col items-center justify-center h-screen">
     <p class="text-3xl mb-4">Date: {curr}</p>
-    <div class="flex gap-2">
+    <div class="flex gap-2 mb-3">
         <button on:click={previousDay} class="btn variant-ghost-primary" disabled={curr === formatDate(start)}>Previous</button>
         <button on:click={nextDay} class="btn variant-ghost-primary" disabled={curr === formatDate(end)}>Next</button>
+    </div>
+    <div class="flex justify-center items-center text-center">
+        {JSON.stringify(displayedRecords.slice(-3))}
     </div>
 </div>
