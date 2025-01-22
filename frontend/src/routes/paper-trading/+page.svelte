@@ -17,11 +17,11 @@
    
 
     for (let record of records) {
-        recordIndex++
+        displayedRecords.push(record)
         if (record.Date > currDate) {
             break
         }
-        displayedRecords.push(record)
+        recordIndex++
     }
 
     function formatDate(date: Date): string {
@@ -37,10 +37,10 @@
         }
         currDate.setDate(currDate.getDate() + 1)
         curr = formatDate(currDate)
-        if (records[recordIndex+1].Date <= currDate) {
-            displayedRecords.push(records[recordIndex+1])
+        if (records[recordIndex].Date <= currDate) {
             recordIndex++
-            console.log(displayedRecords.slice(-3))
+            displayedRecords.push(records[recordIndex])
+            console.log(displayedRecords.slice(-3), currDate)
         }
     }
 
