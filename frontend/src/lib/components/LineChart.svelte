@@ -34,10 +34,9 @@
                 responsive: true,
                 scales: {
                     y: {
-                        beginAtZero: true,
                         title: {
                             display: true,
-                            text: "Net Worth (USD)",
+                            text: "Value (USD)",
                         }
                     },
                     x: {
