@@ -57,6 +57,7 @@
         if (recordIndex > 0 && records[recordIndex - 1].Date > currDate) {
             recordIndex--
             displayedRecords = displayedRecords.slice(0, -1)
+            dates = dates.slice(0, -1)
             // console.log(displayedRecords.slice(-3))
         }
     }
@@ -64,7 +65,30 @@
 
     $: displayedString = JSON.stringify(displayedRecords.slice(-3))
     $: graphPriceData = displayedRecords.map((record) => record.Price)
-    $: console.log(graphPriceData, dates)
+
+
+
+    // BUYING AND SELLING
+    let cash = 100000
+    let marketValue = 0
+    let position = 0
+    $: currValue = displayedRecords.at(-1)?.Price!
+
+    function buy(quantity: number) {
+        cash -= currValue * quantity
+        marketValue += currValue * quantity
+        position += quantity
+    }
+
+    function sell(quantity: number) {
+        cash += currValue * quantity
+        marketValue -= currValue * quantity
+        position -= quantity
+    }
+
+    function updateMarketValue() {
+        
+    }
 </script>
 
 <div class="w-full flex flex-col items-center justify-center h-screen">

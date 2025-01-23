@@ -16,7 +16,7 @@
 
 
     onMount(() => {
-        if (chart) { // update
+        if (chart) {
             chart.destroy();
         }
 
@@ -57,15 +57,15 @@
     });
 
     $: if (chart) {
-        chart.data.labels = xAxisLabels; // Update x-axis labels
+        chart.data.labels = xAxisLabels
         chart.data.datasets = stats.map(stat => ({
             label: stat.label + " " + label,
             data: stat.data,
             borderColor: stat.borderColor || "rgba(75, 192, 192, 1)",
             backgroundColor: stat.backgroundColor || "rgba(75, 192, 192, 0.2)",
             fill: true,
-        }));
-        chart.update(); // Trigger chart update
+        }))
+        chart.update()
     }
 </script>
 
