@@ -5,7 +5,9 @@
     // Register necessary Chart.js components
     Chart.register(LineController, LineElement, PointElement, LinearScale, Title, CategoryScale, Tooltip, Legend);
 
-    let { stats, label, xAxisLabels }: { stats: DataSet[], label: string, xAxisLabels: string[]} = $props()
+    export let stats : DataSet[] 
+    export let label : string
+    export let xAxisLabels: string[] = []
 
     let chart: Chart | null = null
     Chart.defaults.color = 'rgb(250,255,255)'
@@ -53,6 +55,18 @@
             chart?.destroy();
         };
     });
+
+    $: if (chart) {
+        chart.data.labels = xAxisLabels; // Update x-axis labels
+        chart.data.datasets = stats.map(stat => ({
+            label: stat.label + " " + label,
+            data: stat.data,
+            borderColor: stat.borderColor || "rgba(75, 192, 192, 1)",
+            backgroundColor: stat.backgroundColor || "rgba(75, 192, 192, 0.2)",
+            fill: true,
+        }));
+        chart.update(); // Trigger chart update
+    }
 </script>
 
 <canvas class="w-full" bind:this={chartCanvas}></canvas>

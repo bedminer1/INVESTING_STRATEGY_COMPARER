@@ -20,7 +20,7 @@
     
     for (let record of records) {
         displayedRecords.push(record)
-        dates.push((record.Date as Date).toLocaleDateString())
+        dates.push((record.Date as Date).toLocaleDateString("en-GB"))
         if (record.Date > currDate) {
             break
         }
@@ -43,6 +43,7 @@
         if (records[recordIndex].Date <= currDate) {
             recordIndex++
             displayedRecords = [...displayedRecords, records[recordIndex]]
+            dates = [...dates, (records[recordIndex].Date as Date).toLocaleDateString("en-GB")]
             // console.log(displayedRecords.slice(-3))
         }
     }
