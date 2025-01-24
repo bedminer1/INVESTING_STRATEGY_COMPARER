@@ -62,32 +62,30 @@
         }
     }
 
-
-    $: displayedString = JSON.stringify(displayedRecords.slice(-3))
     $: graphPriceData = displayedRecords.map((record) => record.Price)
 
 
 
     // BUYING AND SELLING
     let cash = 100000
-    let marketValue = 0
     let position = 0
+    let quantity: number
     $: currValue = displayedRecords.at(-1)?.Price!
+    $: marketValue = position * currValue
+    $: netWorth = cash + marketValue
 
-    function buy(quantity: number) {
+    $:console.log(netWorth, cash, marketValue, position)
+
+    function buy() {
         cash -= currValue * quantity
         marketValue += currValue * quantity
         position += quantity
     }
 
-    function sell(quantity: number) {
+    function sell() {
         cash += currValue * quantity
         marketValue -= currValue * quantity
         position -= quantity
-    }
-
-    function updateMarketValue() {
-        
     }
 </script>
 
@@ -100,12 +98,16 @@
     <div class="flex justify-center items-center text-center w-full">
         <div class="w-full">
             <LineChart {...{ stats: [{
-                label: "test", 
+                label: "S&P 500", 
                 data: graphPriceData,
                 borderColor: 'rgba(54, 162, 235, 1)',
                 backgroundColor: 'rgba(54, 162, 235, 0.2)'
             }], label: "" , xAxisLabels: dates}}/>
         </div>
     </div>
-    {displayedString}
+    <div class="flex gap-2 mb-3">
+        <input type="number" class="input" bind:value={quantity} placeholder="quantity">
+        <button on:click={buy} class="btn variant-ghost-primary">Buy</button>
+        <button on:click={sell} class="btn variant-ghost-primary">Sell</button>
+    </div>
 </div>
