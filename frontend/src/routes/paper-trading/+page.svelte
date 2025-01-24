@@ -19,7 +19,7 @@
         }
     }
 
-    const interval = setInterval(fetchRecords, 5000)
+    const interval = setInterval(fetchRecords, 2000)
     onDestroy(() => {
         clearInterval(interval)
     })
@@ -33,13 +33,12 @@
     let currDate = records.at(-1)?.Date as Date ?? new Date(2015, 0, 27)
     let curr = formatDate(currDate)
     let dates: string[] = []
+    let windowLength = 30
     
     $: {
         displayedRecords = []
         dates = []
-        start = records.at(-30)?.Date as Date ?? new Date(2015, 0, 27)
-        end = records.at(-1)?.Date as Date ?? new Date(2021, 1, 2)
-        currDate = records.at(-1)?.Date as Date ?? new Date(2015, 0, 27) 
+        start = records.at(-windowLength+1)?.Date as Date ?? new Date(2015, 0, 27)
         for (let record of records) {
             if (record.Date < start) {
                 continue
@@ -51,6 +50,9 @@
             }
             recordIndex++
         }
+        end = records.at(-1)?.Date as Date ?? new Date(2021, 1, 2)
+        currDate = records.at(-1)?.Date as Date ?? new Date(2015, 0, 27) 
+        curr = formatDate(currDate)
     }
 
     function formatDate(date: Date): string {
@@ -117,9 +119,16 @@
 
 <div class="w-full flex flex-col items-center justify-center h-screen">
     <p class="text-3xl mb-4">Date: {curr}</p>
-    <div class="flex gap-2 mb-3">
+    <!-- <div class="flex gap-2 mb-3">
         <button on:click={previousDay} class="btn variant-ghost-primary" disabled={curr === formatDate(start)}>Previous</button>
         <button on:click={nextDay} class="btn variant-ghost-primary" disabled={curr === formatDate(end)}>Next</button>
+    </div> -->
+    <div class="flex gap-2 mb-3">
+        <button on:click={() => windowLength = 7} class="btn variant-ghost-primary">Week</button>
+        <button on:click={() => windowLength = 30} class="btn variant-ghost-primary">Month</button>
+        <button on:click={() => windowLength = 365} class="btn variant-ghost-primary">Year</button>
+        <button on:click={() => windowLength = 365*5} class="btn variant-ghost-primary">5 Years</button>
+        <button on:click={() => windowLength = 365*5*5} class="btn variant-ghost-primary">All</button>
     </div>
     <div class="flex justify-center items-center text-center w-full">
         <div class="w-full">
