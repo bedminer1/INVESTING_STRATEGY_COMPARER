@@ -1,6 +1,8 @@
 <script lang="ts">
     import LineChart from "$lib/components/LineChart.svelte"
     import { onDestroy } from "svelte";
+    import Card from "$lib/components/Card.svelte";
+
     let records: PriceRecord[] = []
 
     async function fetchRecords() {
@@ -102,7 +104,7 @@
     $: marketValue = position * currValue
     $: netWorth = cash + marketValue
 
-    // $:console.log(netWorth, cash, marketValue, position)
+    $:console.log(netWorth, cash, marketValue, position)
 
     function buy() {
         cash -= currValue * quantity
@@ -144,5 +146,16 @@
         <input type="number" class="input" bind:value={quantity} placeholder="quantity">
         <button on:click={buy} class="btn variant-ghost-primary">Buy</button>
         <button on:click={sell} class="btn variant-ghost-primary">Sell</button>
+    </div>
+    <div>
+        <Card 
+            {...{
+                title: "Net Worth ",
+                body: netWorth,
+                subtitle: "Represents 1/10 of the ETF by JP Morgan",
+                icon: "&#9814;"
+            }}
+        />
+
     </div>
 </div>
