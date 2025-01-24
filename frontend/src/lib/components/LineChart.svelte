@@ -65,6 +65,7 @@
             backgroundColor: stat.backgroundColor || "rgba(75, 192, 192, 0.2)",
             fill: true,
         }))
+        chart.options.animation = false
         chart.update()
     }
 </script>

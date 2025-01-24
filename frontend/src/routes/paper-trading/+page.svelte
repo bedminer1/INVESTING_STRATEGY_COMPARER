@@ -1,30 +1,56 @@
 <script lang="ts">
-    import LineChart from "$lib/components/LineChart.svelte";
+    import LineChart from "$lib/components/LineChart.svelte"
+    import { onDestroy } from "svelte";
+    let records: PriceRecord[] = []
 
-    export let data: {
-        records: PriceRecord[]
+    async function fetchRecords() {
+        try {
+            const response = await fetch("http://localhost:4000/paper-trading")
+            if (!response.ok) {
+                console.error("error fetching data: ", response.statusText)
+            }
+            const data: { records: PriceRecord[] } = await response.json()
+            records = data.records
+            records.forEach(record => {
+                record.Date = new Date(record.Date)
+            })
+        } catch (error) {
+            console.error("error updated records")
+        }
     }
-    const records = data.records
-    let displayedRecords: PriceRecord[] = []
-    records.forEach(record => {
-        record.Date = new Date(record.Date)
+
+    const interval = setInterval(fetchRecords, 5000)
+    onDestroy(() => {
+        clearInterval(interval)
     })
+
+    let displayedRecords: PriceRecord[] = []
     let recordIndex = 0
    
     const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
-    const start = new Date(2015, 0, 27)
-    const end = new Date(2021, 1, 2)
-    let currDate = new Date(2015, 0, 27)
+    let start = records.at(-30)?.Date as Date ?? new Date(2015, 0, 27)
+    let end = records.at(-1)?.Date as Date ?? new Date(2021, 1, 2)
+    let currDate = records.at(-1)?.Date as Date ?? new Date(2015, 0, 27)
     let curr = formatDate(currDate)
     let dates: string[] = []
     
-    for (let record of records) {
-        displayedRecords.push(record)
-        dates.push((record.Date as Date).toLocaleDateString("en-GB"))
-        if (record.Date > currDate) {
-            break
+    $: {
+        displayedRecords = []
+        dates = []
+        start = records.at(-30)?.Date as Date ?? new Date(2015, 0, 27)
+        end = records.at(-1)?.Date as Date ?? new Date(2021, 1, 2)
+        currDate = records.at(-1)?.Date as Date ?? new Date(2015, 0, 27) 
+        for (let record of records) {
+            if (record.Date < start) {
+                continue
+            }
+            displayedRecords.push(record)
+            dates.push((record.Date as Date).toLocaleDateString("en-GB"))
+            if (record.Date > currDate) {
+                break
+            }
+            recordIndex++
         }
-        recordIndex++
     }
 
     function formatDate(date: Date): string {
@@ -74,7 +100,7 @@
     $: marketValue = position * currValue
     $: netWorth = cash + marketValue
 
-    $:console.log(netWorth, cash, marketValue, position)
+    // $:console.log(netWorth, cash, marketValue, position)
 
     function buy() {
         cash -= currValue * quantity
