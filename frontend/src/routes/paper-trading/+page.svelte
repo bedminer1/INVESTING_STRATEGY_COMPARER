@@ -4,11 +4,11 @@
     import Card from "$lib/components/Card.svelte";
 
     let records: PriceRecord[] = []
-    let mode = "fast-paper-trading"
+    let frequencyMode = "fast-paper-trading"
 
     async function fetchRecords() {
         try {
-            const response = await fetch(`http://localhost:4000/${mode}`)
+            const response = await fetch(`http://localhost:4000/${frequencyMode}`)
             if (!response.ok) {
                 console.error("error fetching data: ", response.statusText)
             }
@@ -102,19 +102,40 @@
     let position = 0
     let quantity: number
     $: currValue = displayedRecords.at(-1)?.Price!
+    $: orderValue = quantity * currValue
     $: marketValue = position * currValue
     $: netWorth = cash + marketValue
+    
+    let orderModeIsBuy = true
+    let popUpOpen = false
+    let newPosition: number = 0
+    let newCashBalance: number = 0
 
     function buy() {
-        cash -= currValue * quantity
-        marketValue += currValue * quantity
-        position += quantity
+        newPosition = position + quantity
+        newCashBalance = cash - orderValue
+        orderModeIsBuy = true
+        popUpOpen = true
     }
 
     function sell() {
-        cash += currValue * quantity
-        marketValue -= currValue * quantity
-        position -= quantity
+        newPosition = position - quantity
+        newCashBalance = cash + orderValue
+        orderModeIsBuy = false
+        popUpOpen = true
+    }
+
+    function executeOrder() {
+        if (orderModeIsBuy) {
+            cash -= currValue * quantity
+            marketValue += currValue * quantity
+            position += quantity
+        } else {
+            cash += currValue * quantity
+            marketValue -= currValue * quantity
+            position -= quantity
+        }
+        popUpOpen = false
     }
 
     // TODO
@@ -126,10 +147,6 @@
 
 <div class="w-full flex flex-col items-center justify-center h-screen">
     <p class="text-3xl mb-4">Date: {curr}</p>
-    <!-- <div class="flex gap-2 mb-3">
-        <button on:click={previousDay} class="btn variant-ghost-primary" disabled={curr === formatDate(start)}>Previous</button>
-        <button on:click={nextDay} class="btn variant-ghost-primary" disabled={curr === formatDate(end)}>Next</button>
-    </div> -->
     <div class="flex gap-2 mb-3">
         <button on:click={() => windowLength = 7} class="btn variant-ghost-primary">Week</button>
         <button on:click={() => windowLength = 30} class="btn variant-ghost-primary">Month</button>
@@ -147,10 +164,18 @@
             }], label: "" , xAxisLabels: dates}}/>
         </div>
     </div>
-    <div class="flex gap-2 mb-3">
-        <input type="number" class="input" bind:value={quantity} placeholder="quantity">
-        <button on:click={buy} class="btn variant-ghost-primary">Buy</button>
-        <button on:click={sell} class="btn variant-ghost-primary">Sell</button>
+    <div class="flex gap-2 mb-3 w-1/2 justify-center">
+        <input type="number" class="input w-1/5" bind:value={quantity} placeholder="quantity">
+        <button on:click={buy} class="btn variant-ghost-primary" disabled={!quantity}>Buy</button>
+        <button on:click={sell} class="btn variant-ghost-primary" disabled={!quantity}>Sell</button>
+    </div>
+    <div hidden={!popUpOpen} class="w-full">
+        <div class="flex flex-col full justify-center items-center">
+            <p class="w-1/4">Order Value: {orderValue.toFixed(2)}</p>
+            <p class="w-1/4">New Position: {newPosition.toFixed(2)}</p>
+            <p class="w-1/4">Cash Balance: {newCashBalance.toFixed(2)}</p>
+            <button on:click={executeOrder} class="btn variant-ghost-primary w-1/4">Submit Order</button>
+        </div>
     </div>
     <div class="flex gap-4">
         <Card 
@@ -165,7 +190,7 @@
             {...{
                 title: "Position",
                 body: position.toFixed(2),
-                subtitle: "Cash and Market Value of equities",
+                subtitle: "Number of Stocks Owned",
                 icon: "&#9814;"
             }}
         />
@@ -173,7 +198,7 @@
             {...{
                 title: "Cash",
                 body: cash.toFixed(2),
-                subtitle: "Cash and Market Value of equities",
+                subtitle: "Liquid Cash Available",
                 icon: "&#9814;"
             }}
         />
