@@ -104,8 +104,6 @@
     $: marketValue = position * currValue
     $: netWorth = cash + marketValue
 
-    $:console.log(netWorth, cash, marketValue, position)
-
     function buy() {
         cash -= currValue * quantity
         marketValue += currValue * quantity
@@ -147,15 +145,30 @@
         <button on:click={buy} class="btn variant-ghost-primary">Buy</button>
         <button on:click={sell} class="btn variant-ghost-primary">Sell</button>
     </div>
-    <div>
+    <div class="flex gap-4">
         <Card 
             {...{
-                title: "Net Worth ",
-                body: netWorth,
-                subtitle: "Represents 1/10 of the ETF by JP Morgan",
+                title: "Net Worth",
+                body: netWorth.toFixed(2),
+                subtitle: "Cash and Market Value of equities",
                 icon: "&#9814;"
             }}
         />
-
+        <Card 
+            {...{
+                title: "Position",
+                body: position.toFixed(2),
+                subtitle: "Cash and Market Value of equities",
+                icon: "&#9814;"
+            }}
+        />
+        <Card 
+            {...{
+                title: "Cash",
+                body: cash.toFixed(2),
+                subtitle: "Cash and Market Value of equities",
+                icon: "&#9814;"
+            }}
+        />
     </div>
 </div>
