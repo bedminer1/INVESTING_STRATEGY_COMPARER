@@ -29,3 +29,28 @@ func (h *Handler) handlePaperTradingStats(c echo.Context) error {
 		"progress": fmt.Sprintf("%d / %d", currentIndex, numRecords),
 	})
 }
+
+func (h *Handler) handleFastPaperTradingStats(c echo.Context) error {
+	records := []models.Record{}
+	h.DB.Find(&records)
+
+	numRecords := len(records)
+
+	now := time.Now()
+	minutes := now.Minute()
+	seconds := now.Second()
+	totalSeconds := 60 * 60
+	elapsedSeconds := (minutes * 60) + seconds
+
+	progress := float64(elapsedSeconds) / float64(totalSeconds)
+	currentIndex := int(progress * float64(numRecords))
+
+	if currentIndex > numRecords {
+		currentIndex = numRecords
+	}
+	
+	return c.JSON(200, echo.Map{
+		"records": records[:currentIndex],
+		"progress": fmt.Sprintf("%d / %d", currentIndex, numRecords),
+	})
+}

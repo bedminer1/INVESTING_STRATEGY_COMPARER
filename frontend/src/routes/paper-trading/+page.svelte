@@ -4,10 +4,11 @@
     import Card from "$lib/components/Card.svelte";
 
     let records: PriceRecord[] = []
+    let mode = "fast-paper-trading"
 
     async function fetchRecords() {
         try {
-            const response = await fetch("http://localhost:4000/paper-trading")
+            const response = await fetch(`http://localhost:4000/${mode}`)
             if (!response.ok) {
                 console.error("error fetching data: ", response.statusText)
             }
@@ -21,7 +22,7 @@
         }
     }
 
-    const interval = setInterval(fetchRecords, 2000)
+    const interval = setInterval(fetchRecords, 1000)
     onDestroy(() => {
         clearInterval(interval)
     })
@@ -115,6 +116,12 @@
         marketValue -= currValue * quantity
         position -= quantity
     }
+
+    // TODO
+    // implement fast version
+    // customize order data, display price of buy
+    // show portfolio performance history, metrics of gains and losses
+    // allow for custom orders to execute when price is met
 </script>
 
 <div class="w-full flex flex-col items-center justify-center h-screen">

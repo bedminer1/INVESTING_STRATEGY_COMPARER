@@ -19,6 +19,8 @@ func main() {
 	e.GET("/strategies", h.handleGetStrategies)
 	e.GET("/prices", h.handleGetPrices)
 	e.GET("/paper-trading", h.handlePaperTradingStats)
+	e.GET("/fast-paper-trading", h.handleFastPaperTradingStats)
+
 
 	e.Logger.Fatal(e.Start(":4000"))
 }
