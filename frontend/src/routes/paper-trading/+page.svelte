@@ -134,6 +134,19 @@
         popUpOpen = false
     }
 
+    // PORTFOLIO HISTORY
+    let showHistory = false
+    let portfolioHistory: PriceRecord[] = []
+    $: {
+        if (displayedRecords && !isNaN(netWorth)) {
+            portfolioHistory = [...portfolioHistory, ({
+                Price: netWorth,
+                Date: displayedRecords.at(-1)?.Date!
+            })]
+        }
+        console.log(portfolioHistory)
+    }
+
     // TODO
 
     // show portfolio performance history, metrics of gains and losses
@@ -149,20 +162,30 @@
         <button on:click={() => windowLength = 365*5} class="btn variant-ghost-primary">5 Years</button>
         <button on:click={() => windowLength = 365*5*5} class="btn variant-ghost-primary">All</button>
     </div>
-    <div class="flex justify-center items-center text-center w-full">
+    <div class="flex flex-col justify-center items-center text-center w-full">
         <div class="w-full">
+            {#if showHistory}
+            <LineChart {...{ stats: [{
+                label: "Portfolio Value", 
+                data: portfolioHistory.map(record => record.Price),
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(54, 162, 235, 0.2)'
+            }], label: "" , xAxisLabels: portfolioHistory.map(record => (record.Date as Date).toLocaleDateString("en-GB"))}}/>
+            {:else}
             <LineChart {...{ stats: [{
                 label: "S&P 500", 
                 data: graphPriceData,
                 borderColor: 'rgba(54, 162, 235, 1)',
                 backgroundColor: 'rgba(54, 162, 235, 0.2)'
             }], label: "" , xAxisLabels: dates}}/>
+            {/if}
         </div>
     </div>
     <div class="flex gap-2 mb-3 w-1/2 justify-center">
         <input type="number" class="input w-1/5" bind:value={quantity} placeholder="quantity">
         <button on:click={buy} class="btn variant-ghost-primary" disabled={!quantity}>Buy</button>
         <button on:click={sell} class="btn variant-ghost-primary" disabled={!quantity}>Sell</button>
+        <button on:click={() => {showHistory = !showHistory}} class="btn variant-ghost-primary">Performance</button>
     </div>
     <div hidden={!popUpOpen} class="w-full mb-3">
         <div class="flex flex-col justify-center items-center">
