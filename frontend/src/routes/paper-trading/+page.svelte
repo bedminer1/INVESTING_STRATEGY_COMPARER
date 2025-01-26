@@ -108,19 +108,15 @@
     
     let orderModeIsBuy = true
     let popUpOpen = false
-    let newPosition: number = 0
-    let newCashBalance: number = 0
+    $: newPosition = orderModeIsBuy ? position + quantity : position - quantity
+    $: newCashBalance = orderModeIsBuy ? cash - orderValue : cash + orderValue
 
     function buy() {
-        newPosition = position + quantity
-        newCashBalance = cash - orderValue
         orderModeIsBuy = true
         popUpOpen = true
     }
 
     function sell() {
-        newPosition = position - quantity
-        newCashBalance = cash + orderValue
         orderModeIsBuy = false
         popUpOpen = true
     }
@@ -139,8 +135,7 @@
     }
 
     // TODO
-    // implement fast version
-    // customize order data, display price of buy
+
     // show portfolio performance history, metrics of gains and losses
     // allow for custom orders to execute when price is met
 </script>
@@ -169,11 +164,16 @@
         <button on:click={buy} class="btn variant-ghost-primary" disabled={!quantity}>Buy</button>
         <button on:click={sell} class="btn variant-ghost-primary" disabled={!quantity}>Sell</button>
     </div>
-    <div hidden={!popUpOpen} class="w-full">
-        <div class="flex flex-col full justify-center items-center">
-            <p class="w-1/4">Order Value: {orderValue.toFixed(2)}</p>
-            <p class="w-1/4">New Position: {newPosition.toFixed(2)}</p>
-            <p class="w-1/4">Cash Balance: {newCashBalance.toFixed(2)}</p>
+    <div hidden={!popUpOpen} class="w-full mb-3">
+        <div class="flex flex-col justify-center items-center">
+            <div class="w-1/4 flex justify-between mb-4 border-2 border-dotted p-4">
+                <div class="flex flex-col w-3/4">                    
+                    <p class="w-full">Order Value: {orderValue.toFixed(2)}</p>
+                    <p class="w-full">New Position: {newPosition.toFixed(2)}</p>
+                    <p class="w-full">Cash Balance: {newCashBalance.toFixed(2)}</p>
+                </div>
+                <button class="w-20 btn variant-ghost-error h-12" on:click={() => {popUpOpen = false}}>Cancel</button>
+            </div>
             <button on:click={executeOrder} class="btn variant-ghost-primary w-1/4">Submit Order</button>
         </div>
     </div>
