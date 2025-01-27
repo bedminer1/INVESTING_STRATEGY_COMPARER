@@ -25,7 +25,7 @@
             data: {
                 labels: xAxisLabels,
                 datasets: stats.map(stat => ({
-                    label: stat.label + " " + label,
+                    label: stat.label,
                     data: stat.data,
                     borderColor: stat.borderColor || 'rgba(75, 192, 192, 1)',
                     backgroundColor: stat.backgroundColor || 'rgba(75, 192, 192, 0.2)',
@@ -38,7 +38,7 @@
                     y: {
                         title: {
                             display: true,
-                            text: "Value (USD)",
+                            text: label,
                         }
                     },
                     x: {
@@ -59,7 +59,7 @@
     $: if (chart) {
         chart.data.labels = xAxisLabels
         chart.data.datasets = stats.map(stat => ({
-            label: stat.label + " " + label,
+            label: stat.label,
             data: stat.data,
             borderColor: stat.borderColor || "rgba(75, 192, 192, 1)",
             backgroundColor: stat.backgroundColor || "rgba(75, 192, 192, 0.2)",

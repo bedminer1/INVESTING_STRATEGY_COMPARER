@@ -100,9 +100,12 @@
 
     // PORTFOLIO HISTORY
     let showHistory = false
+    let showPerformanceHistory = false
     let portfolioHistory: PriceRecord[] = []
     let displayedPortfolioHistory: PriceRecord[] = []
     let performance: number = 0
+    let performanceHistory: PriceRecord[] = []
+    let displayedPerformanceHistory: PriceRecord[] = [] 
     $: {
         if (displayedRecords && !isNaN(netWorth)) {
             portfolioHistory = [...portfolioHistory, ({
@@ -111,6 +114,11 @@
             })]
             displayedPortfolioHistory = portfolioHistory.slice(-windowLength)
             performance = ((displayedPortfolioHistory.at(-1)?.Price! - displayedPortfolioHistory[1]?.Price!) / displayedPortfolioHistory.at(-1)?.Price!) * 100
+            performanceHistory = [...performanceHistory, ({
+                Price: performance,
+                Date: displayedRecords.at(-1)?.Date!
+            })]
+            displayedPerformanceHistory = performanceHistory.slice(-windowLength)
         }
     }
 
@@ -130,29 +138,37 @@
         <button on:click={() => windowLength = 365*5*5} class="btn variant-ghost-primary">All</button>
     </div>
     <div class="flex flex-col justify-center items-center text-center w-full">
-        <div class="w-full">
-            {#if showHistory}
-            <LineChart {...{ stats: [{
-                label: "Portfolio Value", 
-                data: displayedPortfolioHistory.map(record => record.Price),
-                borderColor: 'rgba(54, 162, 235, 1)',
-                backgroundColor: 'rgba(54, 162, 235, 0.2)'
-            }], label: "" , xAxisLabels: displayedPortfolioHistory.map(record => (record.Date as Date).toLocaleDateString("en-GB"))}}/>
-            {:else}
+        <div class="w-full p-4">
+            {#if !showHistory}
             <LineChart {...{ stats: [{
                 label: "S&P 500", 
                 data: displayedRecords.map((record) => record.Price),
                 borderColor: 'rgba(54, 162, 235, 1)',
                 backgroundColor: 'rgba(54, 162, 235, 0.2)'
-            }], label: "" , xAxisLabels: displayedRecords.map(record => (record.Date as Date).toLocaleDateString("en-GB"))}}/>
+            }], label: "Value (USD)" , xAxisLabels: displayedRecords.map(record => (record.Date as Date).toLocaleDateString("en-GB"))}}/>
+            {:else if showPerformanceHistory}
+            <LineChart {...{ stats: [{
+                label: "Portfolio Performance", 
+                data: displayedPerformanceHistory.map(record => record.Price),
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(54, 162, 235, 0.2)'
+            }], label: "%" , xAxisLabels: displayedPerformanceHistory.map(record => (record.Date as Date).toLocaleDateString("en-GB"))}}/>
+            {:else}
+            <LineChart {...{ stats: [{
+                label: "Portfolio Value", 
+                data: displayedPortfolioHistory.map(record => record.Price),
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(54, 162, 235, 0.2)'
+            }], label: "Value (USD)" , xAxisLabels: displayedPortfolioHistory.map(record => (record.Date as Date).toLocaleDateString("en-GB"))}}/>
             {/if}
         </div>
     </div>
-    <div class="flex gap-2 mb-3 w-1/2 justify-center">
+    <div class="flex gap-2 mb-3 w-2/3 justify-center">
         <input type="number" class="input w-1/5" bind:value={quantity} placeholder="quantity">
         <button on:click={buy} class="btn variant-ghost-primary" disabled={!quantity}>Buy</button>
         <button on:click={sell} class="btn variant-ghost-primary" disabled={!quantity}>Sell</button>
-        <button on:click={() => {showHistory = !showHistory}} class="btn variant-ghost-primary">Performance</button>
+        <button on:click={() => {showHistory = !showHistory}} class="btn variant-ghost-primary">Stock/Portfolio</button>
+        <button on:click={() => {showPerformanceHistory = !showPerformanceHistory}} class="btn variant-ghost-primary">Value/Performance</button>
     </div>
     <div hidden={!popUpOpen} class="w-full mb-3">
         <div class="flex flex-col justify-center items-center">
@@ -194,7 +210,7 @@
         />
         <Card 
             {...{
-                title: "Performace",
+                title: "P&L",
                 body: performance.toFixed(2) + "%",
                 subtitle: "Performance over Time",
                 icon: "&#9814;"
