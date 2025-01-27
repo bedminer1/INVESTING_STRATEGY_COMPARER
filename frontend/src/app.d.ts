@@ -30,5 +30,12 @@ interface WeeklyRecords {
 
 interface PriceRecord {
 	Price: number
-	Date: string | Date
+	Date: Date
+}
+
+interface OrderRecord {
+	Price: number
+	Date: Date
+	Quantity: number
+	IsBuyOrder: boolean
 }

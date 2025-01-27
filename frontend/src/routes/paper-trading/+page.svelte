@@ -13,10 +13,11 @@
                 console.error("error fetching data: ", response.statusText)
             }
             const data: { records: PriceRecord[] } = await response.json()
-            records = data.records
-            records.forEach(record => {
+            let unparsedRecords = data.records
+            unparsedRecords.forEach(record => {
                 record.Date = new Date(record.Date)
             })
+            records = unparsedRecords
         } catch (error) {
             console.error("error updated records")
         }
@@ -49,7 +50,7 @@
             }
             recordIndex++
         }
-        currDate = records.at(-1)?.Date as Date ?? new Date(2015, 0, 27) 
+        currDate = records.at(-1)?.Date ?? new Date(2015, 0, 27) 
         curr = formatDate(currDate)
     }
 
@@ -61,42 +62,14 @@
     }
 
 
-    // BUYING AND SELLING
+    // ASSETS 
     let cash = 100000
     let position = 0
     let quantity: number
     $: currValue = displayedRecords.at(-1)?.Price!
-    $: orderValue = quantity * currValue
+    $: orderValue = quantity * targetPrice
     $: marketValue = position * currValue
     $: netWorth = cash + marketValue
-    
-    let orderModeIsBuy = true
-    let popUpOpen = false
-    $: newPosition = orderModeIsBuy ? position + quantity : position - quantity
-    $: newCashBalance = orderModeIsBuy ? cash - orderValue : cash + orderValue
-
-    function buy() {
-        orderModeIsBuy = true
-        popUpOpen = true
-    }
-
-    function sell() {
-        orderModeIsBuy = false
-        popUpOpen = true
-    }
-
-    function executeOrder() {
-        if (orderModeIsBuy) {
-            cash -= currValue * quantity
-            marketValue += currValue * quantity
-            position += quantity
-        } else {
-            cash += currValue * quantity
-            marketValue -= currValue * quantity
-            position -= quantity
-        }
-        popUpOpen = false
-    }
 
     // PORTFOLIO HISTORY
     let showHistory = false
@@ -122,9 +95,50 @@
         }
     }
 
+    // CUSTOM ORDERS
+    let orders: OrderRecord[] = []
+    let orderModeIsBuy = true
+    let popUpOpen = false
+    let targetPrice: number
+    $: newPosition = orderModeIsBuy ? position + quantity : position - quantity
+    $: newCashBalance = orderModeIsBuy ? cash - orderValue : cash + orderValue
+
+    function buy() {
+        orderModeIsBuy = true
+        popUpOpen = true
+    }
+
+    function sell() {
+        orderModeIsBuy = false
+        popUpOpen = true
+    }
+
+    function addOrder() {
+        orders = [...orders, {
+            Price: targetPrice,
+            Date: currDate,
+            Quantity: quantity,
+            IsBuyOrder: orderModeIsBuy
+        }]
+    }
+
+    $: console.log(orders)
+
+    function executeOrder(order: OrderRecord) {
+        if (order.IsBuyOrder) {
+            cash -= currValue * order.Quantity
+            marketValue += currValue * order.Quantity
+            position += order.Quantity
+        } else {
+            cash += currValue * order.Quantity
+            marketValue -= currValue * order.Quantity
+            position -= order.Quantity
+        }
+        popUpOpen = false
+    }
+
     // TODO
 
-    // show portfolio performance history, metrics of gains and losses
     // allow for custom orders to execute when price is met
 </script>
 
@@ -164,23 +178,24 @@
         </div>
     </div>
     <div class="flex gap-2 mb-3 w-2/3 justify-center">
-        <input type="number" class="input w-1/5" bind:value={quantity} placeholder="quantity">
-        <button on:click={buy} class="btn variant-ghost-primary" disabled={!quantity}>Buy</button>
-        <button on:click={sell} class="btn variant-ghost-primary" disabled={!quantity}>Sell</button>
+        <button on:click={buy} class="btn variant-ghost-primary">Buy</button>
+        <button on:click={sell} class="btn variant-ghost-primary">Sell</button>
         <button on:click={() => {showHistory = !showHistory}} class="btn variant-ghost-primary">Stock/Portfolio</button>
-        <button on:click={() => {showPerformanceHistory = !showPerformanceHistory}} class="btn variant-ghost-primary">Value/Performance</button>
+        <button on:click={() => {showPerformanceHistory = !showPerformanceHistory}} disabled={showHistory === false} class="btn variant-ghost-primary">Value/Performance</button>
     </div>
     <div hidden={!popUpOpen} class="w-full mb-3">
         <div class="flex flex-col justify-center items-center">
-            <div class="w-1/4 flex justify-between mb-4 border-2 border-dotted p-4">
-                <div class="flex flex-col w-3/4">                    
+            <div class="w-1/2 flex justify-between mb-4 border-2 border-dotted p-4">
+                <div class="flex flex-col w-3/4">
+                    <input type="number" class="input" bind:value={quantity} placeholder="quantity">
+                    <input type="number" class="input" bind:value={targetPrice} placeholder="order price">                    
                     <p class="w-full">Order Value: {orderValue.toFixed(2)}</p>
                     <p class="w-full">New Position: {newPosition.toFixed(2)}</p>
                     <p class="w-full">Cash Balance: {newCashBalance.toFixed(2)}</p>
                 </div>
                 <button class="w-20 btn variant-ghost-error h-12" on:click={() => {popUpOpen = false}}>Cancel</button>
             </div>
-            <button on:click={executeOrder} class="btn variant-ghost-primary w-1/4">Submit Order</button>
+            <button on:click={addOrder} class="btn variant-ghost-primary w-1/4">Submit Order</button>
         </div>
     </div>
     <div class="flex gap-4">
