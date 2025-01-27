@@ -32,28 +32,23 @@
    
     const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
     let start = records.at(-30)?.Date as Date ?? new Date(2015, 0, 27)
-    let end = records.at(-1)?.Date as Date ?? new Date(2021, 1, 2)
     let currDate = records.at(-1)?.Date as Date ?? new Date(2015, 0, 27)
     let curr = formatDate(currDate)
-    let dates: string[] = []
     let windowLength = 30
     
     $: {
         displayedRecords = []
-        dates = []
         start = records.at(-windowLength+1)?.Date as Date ?? new Date(2015, 0, 27)
         for (let record of records) {
             if (record.Date < start) {
                 continue
             }
             displayedRecords.push(record)
-            dates.push((record.Date as Date).toLocaleDateString("en-GB"))
             if (record.Date > currDate) {
                 break
             }
             recordIndex++
         }
-        end = records.at(-1)?.Date as Date ?? new Date(2021, 1, 2)
         currDate = records.at(-1)?.Date as Date ?? new Date(2015, 0, 27) 
         curr = formatDate(currDate)
     }
@@ -64,37 +59,6 @@
         const year = date.getFullYear()
         return `${day} ${month} ${year}`
     }
-
-    function nextDay() {
-        if (currDate >= end) {
-            return
-        }
-        currDate.setDate(currDate.getDate() + 1)
-        curr = formatDate(currDate)
-        if (records[recordIndex].Date <= currDate) {
-            recordIndex++
-            displayedRecords = [...displayedRecords, records[recordIndex]]
-            dates = [...dates, (records[recordIndex].Date as Date).toLocaleDateString("en-GB")]
-            // console.log(displayedRecords.slice(-3))
-        }
-    }
-
-    function previousDay() {
-        if (currDate <= start) {
-            return
-        }
-        currDate.setDate(currDate.getDate() - 1)
-        curr = formatDate(currDate)
-        if (recordIndex > 0 && records[recordIndex - 1].Date > currDate) {
-            recordIndex--
-            displayedRecords = displayedRecords.slice(0, -1)
-            dates = dates.slice(0, -1)
-            // console.log(displayedRecords.slice(-3))
-        }
-    }
-
-    $: graphPriceData = displayedRecords.map((record) => record.Price)
-
 
 
     // BUYING AND SELLING
@@ -137,14 +101,17 @@
     // PORTFOLIO HISTORY
     let showHistory = false
     let portfolioHistory: PriceRecord[] = []
+    let displayedPortfolioHistory: PriceRecord[] = []
+    let performance: number = 0
     $: {
         if (displayedRecords && !isNaN(netWorth)) {
             portfolioHistory = [...portfolioHistory, ({
                 Price: netWorth,
                 Date: displayedRecords.at(-1)?.Date!
             })]
+            displayedPortfolioHistory = portfolioHistory.slice(-windowLength)
+            performance = ((displayedPortfolioHistory.at(-1)?.Price! - displayedPortfolioHistory[1]?.Price!) / displayedPortfolioHistory.at(-1)?.Price!) * 100
         }
-        console.log(portfolioHistory)
     }
 
     // TODO
@@ -167,17 +134,17 @@
             {#if showHistory}
             <LineChart {...{ stats: [{
                 label: "Portfolio Value", 
-                data: portfolioHistory.map(record => record.Price),
+                data: displayedPortfolioHistory.map(record => record.Price),
                 borderColor: 'rgba(54, 162, 235, 1)',
                 backgroundColor: 'rgba(54, 162, 235, 0.2)'
-            }], label: "" , xAxisLabels: portfolioHistory.map(record => (record.Date as Date).toLocaleDateString("en-GB"))}}/>
+            }], label: "" , xAxisLabels: displayedPortfolioHistory.map(record => (record.Date as Date).toLocaleDateString("en-GB"))}}/>
             {:else}
             <LineChart {...{ stats: [{
                 label: "S&P 500", 
-                data: graphPriceData,
+                data: displayedRecords.map((record) => record.Price),
                 borderColor: 'rgba(54, 162, 235, 1)',
                 backgroundColor: 'rgba(54, 162, 235, 0.2)'
-            }], label: "" , xAxisLabels: dates}}/>
+            }], label: "" , xAxisLabels: displayedRecords.map(record => (record.Date as Date).toLocaleDateString("en-GB"))}}/>
             {/if}
         </div>
     </div>
@@ -205,7 +172,7 @@
             {...{
                 title: "Net Worth",
                 body: netWorth.toFixed(2),
-                subtitle: "Cash and Market Value of equities",
+                subtitle: "Total Assets Value",
                 icon: "&#9814;"
             }}
         />
@@ -213,7 +180,7 @@
             {...{
                 title: "Position",
                 body: position.toFixed(2),
-                subtitle: "Number of Stocks Owned",
+                subtitle: "No. of Stocks Owned",
                 icon: "&#9814;"
             }}
         />
@@ -222,6 +189,14 @@
                 title: "Cash",
                 body: cash.toFixed(2),
                 subtitle: "Liquid Cash Available",
+                icon: "&#9814;"
+            }}
+        />
+        <Card 
+            {...{
+                title: "Performace",
+                body: performance.toFixed(2) + "%",
+                subtitle: "Performance over Time",
                 icon: "&#9814;"
             }}
         />
