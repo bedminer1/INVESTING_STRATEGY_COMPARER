@@ -93,6 +93,16 @@
             })]
             displayedPerformanceHistory = performanceHistory.slice(-windowLength)
         }
+
+        // check orders
+        for (let order of orders) {
+            if ((order.IsBuyOrder && order.Price >= currValue) 
+            || (!order.IsBuyOrder && order.Price <= currValue)) {
+                executeOrder(order)
+                let index = orders.indexOf(order)
+                orders.splice(index, 1)
+            }
+        }
     }
 
     // CUSTOM ORDERS
@@ -104,25 +114,27 @@
     $: newCashBalance = orderModeIsBuy ? cash - orderValue : cash + orderValue
 
     function buy() {
+        targetPrice = currValue
         orderModeIsBuy = true
         popUpOpen = true
     }
 
     function sell() {
+        targetPrice = currValue
         orderModeIsBuy = false
         popUpOpen = true
     }
 
     function addOrder() {
-        orders = [...orders, {
+        let order = {
             Price: targetPrice,
             Date: currDate,
             Quantity: quantity,
             IsBuyOrder: orderModeIsBuy
-        }]
+        }
+        orders = [...orders, order]
+        console.log("Added Order: ", order)
     }
-
-    $: console.log(orders)
 
     function executeOrder(order: OrderRecord) {
         if (order.IsBuyOrder) {
@@ -134,6 +146,7 @@
             marketValue -= currValue * order.Quantity
             position -= order.Quantity
         }
+        console.log("Executed order: ", order, "Curr Value: ", currValue)
         popUpOpen = false
     }
 
