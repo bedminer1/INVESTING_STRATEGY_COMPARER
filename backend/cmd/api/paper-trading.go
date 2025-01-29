@@ -1,12 +1,14 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/bedminer1/SnP/models"
 	"github.com/labstack/echo/v4"
+	"gorm.io/gorm"
 )
 
 func (h *Handler) handlePaperTradingStats(c echo.Context) error {
@@ -17,7 +19,7 @@ func (h *Handler) handlePaperTradingStats(c echo.Context) error {
 
 	now := time.Now()
 	currentTimeOfDay := now.Hour()*3600 + now.Minute()*60 + now.Second() // Time of day in seconds
-	totalSeconds := int((time.Hour * 24).Seconds())                        // Total simulation seconds
+	totalSeconds := int((time.Hour * 24).Seconds())                      // Total simulation seconds
 	progress := float64(currentTimeOfDay) / float64(totalSeconds)
 	currentIndex := int(progress * float64(numRecords))
 
@@ -26,7 +28,7 @@ func (h *Handler) handlePaperTradingStats(c echo.Context) error {
 	}
 
 	return c.JSON(200, echo.Map{
-		"records": records[:currentIndex],
+		"records":  records[:currentIndex],
 		"progress": fmt.Sprintf("%d / %d", currentIndex, numRecords),
 	})
 }
@@ -49,9 +51,9 @@ func (h *Handler) handleFastPaperTradingStats(c echo.Context) error {
 	if currentIndex > numRecords {
 		currentIndex = numRecords
 	}
-	
+
 	return c.JSON(200, echo.Map{
-		"records": records[:currentIndex],
+		"records":  records[:currentIndex],
 		"progress": fmt.Sprintf("%d / %d", currentIndex, numRecords),
 	})
 }
@@ -65,20 +67,16 @@ func (h *Handler) handleSaveUserStats(c echo.Context) error {
 	}
 
 	var existingUser models.User
-	if err := h.DB.Where("user_id = ?", userData.UserID).First(&existingUser).Error; err == nil {
-		return c.JSON(http.StatusConflict, echo.Map{
-			"error": "user already exists",
-		})
-	}
+	result := h.DB.Where("user_id = ?", userData.UserID).First(&existingUser)
 
-	if err := h.DB.Create(&userData).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{
-			"error": "failed to save user: " + err.Error(),
-		})
+	if result.Error != nil && errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		h.DB.Create(&userData)
+	} else {
+		h.DB.Model(&existingUser).Where("user_id = ?", userData.UserID).Updates(userData)
 	}
 
 	return c.JSON(200, echo.Map{
-		"message": "user stats saved",
+		"message":   "user stats saved",
 		"user_info": userData,
 	})
 }
