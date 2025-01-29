@@ -13,6 +13,9 @@
                 console.error("error fetching data: ", response.statusText)
             }
             const data: { records: PriceRecord[] } = await response.json()
+            if (!data.records) {
+                console.error("No records found in response")
+            }
             let unparsedRecords = data.records
             unparsedRecords.forEach(record => {
                 record.Date = new Date(record.Date)
@@ -29,30 +32,13 @@
     })
 
     let displayedRecords: PriceRecord[] = []
-    let recordIndex = 0
+
    
     const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
     let start = records.at(-30)?.Date as Date ?? new Date(2015, 0, 27)
     let currDate = records.at(-1)?.Date as Date ?? new Date(2015, 0, 27)
     let curr = formatDate(currDate)
     let windowLength = 30
-    
-    $: {
-        displayedRecords = []
-        start = records.at(-windowLength+1)?.Date as Date ?? new Date(2015, 0, 27)
-        for (let record of records) {
-            if (record.Date < start) {
-                continue
-            }
-            displayedRecords.push(record)
-            if (record.Date > currDate) {
-                break
-            }
-            recordIndex++
-        }
-        currDate = records.at(-1)?.Date ?? new Date(2015, 0, 27) 
-        curr = formatDate(currDate)
-    }
 
     function formatDate(date: Date): string {
         const day = String(date.getDate()).padStart(2, "0")
@@ -66,7 +52,7 @@
     let cash = 100000
     let position = 0
     let quantity: number
-    $: currValue = displayedRecords.at(-1)?.Price!
+    $: currValue = displayedRecords.at(-1)?.Price ?? 0
     $: orderValue = quantity * targetPrice
     $: marketValue = position * currValue
     $: netWorth = cash + marketValue
@@ -78,23 +64,37 @@
     let displayedPortfolioHistory: PriceRecord[] = []
     let performance: number = 0
     let performanceHistory: PriceRecord[] = []
-    let displayedPerformanceHistory: PriceRecord[] = [] 
+    let displayedPerformanceHistory: PriceRecord[] = []
+    
+    // UPDATE stock data and portfolio stats
     $: {
-        if (displayedRecords && !isNaN(netWorth)) {
-            portfolioHistory = [...portfolioHistory, ({
-                Price: netWorth,
-                Date: displayedRecords.at(-1)?.Date!
-            })]
-            displayedPortfolioHistory = portfolioHistory.slice(-windowLength)
-            performance = ((displayedPortfolioHistory.at(-1)?.Price! - displayedPortfolioHistory[1]?.Price!) / displayedPortfolioHistory.at(-1)?.Price!) * 100
-            performanceHistory = [...performanceHistory, ({
-                Price: performance,
-                Date: displayedRecords.at(-1)?.Date!
-            })]
-            displayedPerformanceHistory = performanceHistory.slice(-windowLength)
-        }
+        displayedRecords = records.slice(-windowLength)
+        currDate = records.at(-1)?.Date ?? new Date(2015, 0, 27) 
+        curr = formatDate(currDate)
+    }
 
-        // check orders
+    // UPDATE portfolio history
+    $: {
+        if (displayedRecords.length > 0 && !isNaN(netWorth)) {
+            const newRecord = {
+                Price: netWorth,
+                Date: currDate
+            }
+            portfolioHistory = [...portfolioHistory, newRecord].slice(-windowLength)
+        }
+    }
+
+    // UPDATE performance history
+    $: {
+        if (portfolioHistory.length > 1) {
+            const latestPrice = portfolioHistory.at(-1)?.Price ?? 0
+            const initialPrice = portfolioHistory[0]?.Price ?? 1
+            performance = ((latestPrice - initialPrice) / initialPrice) * 100
+            performanceHistory = [...performanceHistory, { Price: performance, Date: currDate }].slice(-windowLength)
+        }
+    }
+
+    $: {
         for (let order of orders) {
             if ((order.IsBuyOrder && order.Price >= currValue) 
             || (!order.IsBuyOrder && order.Price <= currValue)) {
@@ -134,25 +134,48 @@
         }
         orders = [...orders, order]
         console.log("Added Order: ", order)
+        popUpOpen = false
     }
 
     function executeOrder(order: OrderRecord) {
+        const orderValue = currValue * order.Quantity
         if (order.IsBuyOrder) {
-            cash -= currValue * order.Quantity
-            marketValue += currValue * order.Quantity
+            cash -= orderValue
+            marketValue += orderValue
             position += order.Quantity
         } else {
-            cash += currValue * order.Quantity
-            marketValue -= currValue * order.Quantity
+            cash += orderValue
+            marketValue -= orderValue
             position -= order.Quantity
         }
         console.log("Executed order: ", order, "Curr Value: ", currValue)
-        popUpOpen = false
+    }
+
+    async function saveMetric() {
+        const userMetrics = {
+            user_id: "exampleID",
+            cash,
+            position,
+            net_worth_history: portfolioHistory
+        }
+
+        try {
+            const response = await fetch("http://localhost:4000/save-metrics", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(userMetrics)
+            })
+        } catch (error) {
+            console.error("Error saving metrics")
+        }
     }
 
     // TODO
 
-    // allow for custom orders to execute when price is met
+    // add feature to cancel orders, view orders
+    // add state to the app that's persisted beyond refresh
 </script>
 
 <div class="w-full flex flex-col items-center justify-center h-screen">

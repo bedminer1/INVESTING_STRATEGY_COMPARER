@@ -21,3 +21,10 @@ type WeeklyRecords struct {
 	Strategy string
 	Records  []WeeklyRecord
 }
+
+type UserMetrics struct {
+	UserID string `json:"user_id"`
+	Cash float64 `json:"cash"`
+	Position float64 `json:"position"`
+	NetWorthHistory []Record `json:"net_worth_history"`
+}

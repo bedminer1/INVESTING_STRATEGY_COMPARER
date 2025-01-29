@@ -54,3 +54,8 @@ func (h *Handler) handleFastPaperTradingStats(c echo.Context) error {
 		"progress": fmt.Sprintf("%d / %d", currentIndex, numRecords),
 	})
 }
+
+func (h *Handler) handleSaveMetrics(c echo.Context) error {
+	test := c.FormValue("user_id")
+	return c.JSON(200, test)
+}
