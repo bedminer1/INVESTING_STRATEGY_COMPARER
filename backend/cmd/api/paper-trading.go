@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/bedminer1/SnP/models"
@@ -55,7 +56,49 @@ func (h *Handler) handleFastPaperTradingStats(c echo.Context) error {
 	})
 }
 
-func (h *Handler) handleSaveMetrics(c echo.Context) error {
-	test := c.FormValue("user_id")
-	return c.JSON(200, test)
+func (h *Handler) handleSaveUserStats(c echo.Context) error {
+	var userData models.User
+	if err := c.Bind(&userData); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "invalid request data: " + err.Error(),
+		})
+	}
+
+	var existingUser models.User
+	if err := h.DB.Where("user_id = ?", userData.UserID).First(&existingUser).Error; err == nil {
+		return c.JSON(http.StatusConflict, echo.Map{
+			"error": "user already exists",
+		})
+	}
+
+	if err := h.DB.Create(&userData).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "failed to save user: " + err.Error(),
+		})
+	}
+
+	return c.JSON(200, echo.Map{
+		"message": "user stats saved",
+		"user_info": userData,
+	})
+}
+
+func (h *Handler) handleFetchUserStats(c echo.Context) error {
+	userID := c.QueryParam("user_id")
+	if userID == "" {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "user_id is required",
+		})
+	}
+
+	var user models.User
+	if err := h.DB.Preload("NetWorthHistory").Where("user_id = ?", userID).First(&user).Error; err != nil {
+		return c.JSON(http.StatusNotFound, echo.Map{
+			"error": "user not found",
+		})
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"user_info": user,
+	})
 }

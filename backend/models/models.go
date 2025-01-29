@@ -1,13 +1,22 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type Record struct {
 	Price float64
 	Date  time.Time
 }
 
-type Records []Record
+type PortfolioRecord struct {
+	gorm.Model
+	UserID string    `json:"user_id" gorm:"index"`
+	Price  float64   `json:"price"`
+	Date   time.Time `json:"date"`
+}
 
 type WeeklyRecord struct {
 	Time     time.Time
@@ -22,9 +31,9 @@ type WeeklyRecords struct {
 	Records  []WeeklyRecord
 }
 
-type UserMetrics struct {
-	UserID string `json:"user_id"`
-	Cash float64 `json:"cash"`
-	Position float64 `json:"position"`
-	NetWorthHistory []Record `json:"net_worth_history"`
+type User struct {
+	UserID          string            `json:"user_id" gorm:"uniqueIndex"`
+	Cash            float64           `json:"cash"`
+	Position        float64           `json:"position"`
+	NetWorthHistory []PortfolioRecord `json:"net_worth_history" gorm:"foreignKey:UserID;references:UserID"`
 }

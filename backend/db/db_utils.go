@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func Get(start, end time.Time, fileName string, r *models.Records) {
+func Get(start, end time.Time, fileName string, r *[]models.Record) {
 	db, err := gorm.Open(sqlite.Open(fileName), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect to db")
@@ -25,7 +25,7 @@ func Get(start, end time.Time, fileName string, r *models.Records) {
 	db.Where("date BETWEEN ? AND ?", start, end).Find(&r)
 }
 
-func GetCSV(filename string) models.Records {
+func GetCSV(filename string) []models.Record {
 	f, err := os.Open(filename)
 	if err != nil {
 		panic(err)
@@ -37,7 +37,7 @@ func GetCSV(filename string) models.Records {
 	if err != nil {
 		panic(err)
 	}
-	res := make(models.Records, len(data))
+	res := make([]models.Record, len(data))
 
 	for i, row := range data[1:] {
 		r := models.Record{}

@@ -23,7 +23,7 @@ func InitDB(fileName string) *gorm.DB {
 	}
 
 	// migrate schema
-	if err := db.AutoMigrate(&models.Record{}); err != nil {
+	if err := db.AutoMigrate(&models.Record{}, &models.User{}, &models.PortfolioRecord{}); err != nil {
 		panic("failed to migrate schema")
 	}
 
@@ -34,8 +34,8 @@ func NewHandler(db *gorm.DB) *Handler {
 	return &Handler{DB: db}
 }
 
-func (h *Handler) fetchPrices(start, end time.Time) *models.Records {
-	priceRecords := &models.Records{}
+func (h *Handler) fetchPrices(start, end time.Time) *[]models.Record {
+	priceRecords := &[]models.Record{}
 	h.DB.Where("date BETWEEN ? AND ?", start, end).Find(&priceRecords)
 
 	return priceRecords

@@ -21,7 +21,7 @@ func CalculateSnPValue(currSnPPrice, shares, reserves float64) float64 {
 }
 
 // Strat 1: DCA, 1000 per month
-func DCA(amount float64, priceRecords models.Records) []models.WeeklyRecord {
+func DCA(amount float64, priceRecords []models.Record) []models.WeeklyRecord {
 	investmentMade := false
 	records := []models.WeeklyRecord{}
 	shares := float64(0)
@@ -50,7 +50,7 @@ func DCA(amount float64, priceRecords models.Records) []models.WeeklyRecord {
 }
 
 // Strat 2: Value Averaging
-func VA(targetGrowth float64, r models.Records) []models.WeeklyRecord {
+func VA(targetGrowth float64, r []models.Record) []models.WeeklyRecord {
 	reserves := 0.0
 	shares := 0.0
 	records := []models.WeeklyRecord{}
@@ -101,7 +101,7 @@ type DynamicVAConfig struct {
 }
 
 // Strat 3: Dynamic Value Averaging
-func DynamicVA(targetGrowth float64, r models.Records, cfg DynamicVAConfig) []models.WeeklyRecord {
+func DynamicVA(targetGrowth float64, r []models.Record, cfg DynamicVAConfig) []models.WeeklyRecord {
 	reserves := 0.0
 	shares := 0.0
 	records := []models.WeeklyRecord{}
@@ -160,7 +160,7 @@ func calculateAverage(prices []float64) float64 {
 }
 
 // Strat 4: Buy Low, Sell High
-func BuyLowSellHigh(r models.Records) []models.WeeklyRecord {
+func BuyLowSellHigh(r []models.Record) []models.WeeklyRecord {
 	reserves := 0.0
 	shares := 0.0
 	records := []models.WeeklyRecord{}
@@ -218,7 +218,7 @@ func BuyLowSellHigh(r models.Records) []models.WeeklyRecord {
 }
 
 // Strat 5: Mattress
-func Mattress(r models.Records) []models.WeeklyRecord {
+func Mattress(r []models.Record) []models.WeeklyRecord {
 	reserves := 0.0
 	records := []models.WeeklyRecord{}
 	investmentMade := false
@@ -247,7 +247,7 @@ func Mattress(r models.Records) []models.WeeklyRecord {
 }
 
 // Prints it out using tabwriter
-func CompareStrats(out io.Writer, priceRecords models.Records, results []models.WeeklyRecords) {
+func CompareStrats(out io.Writer, priceRecords []models.Record, results []models.WeeklyRecords) {
 	fmt.Fprintln(out, "Number of Strategies:", len(results))
 	fmt.Fprintln(out)
 

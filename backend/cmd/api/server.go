@@ -20,8 +20,8 @@ func main() {
 	e.GET("/prices", h.handleGetPrices)
 	e.GET("/paper-trading", h.handlePaperTradingStats)
 	e.GET("/fast-paper-trading", h.handleFastPaperTradingStats)
-	e.POST("save-metrics", h.handleSaveMetrics)
-
+	e.POST("save-metrics", h.handleSaveUserStats)
+	e.GET("user-stats", h.handleFetchUserStats)
 
 	e.Logger.Fatal(e.Start(":4000"))
 }
