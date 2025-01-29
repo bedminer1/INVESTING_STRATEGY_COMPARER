@@ -92,6 +92,8 @@
             performance = ((latestPrice - initialPrice) / initialPrice) * 100
             performanceHistory = [...performanceHistory, { Price: performance, Date: currDate }].slice(-windowLength)
         }
+
+        saveMetric()
     }
 
     $: {
@@ -151,12 +153,20 @@
         console.log("Executed order: ", order, "Curr Value: ", currValue)
     }
 
+    const USERID = "bed"
+
     async function saveMetric() {
         const userMetrics = {
-            user_id: "exampleID",
+            user_id: USERID,
             cash,
             position,
-            net_worth_history: portfolioHistory
+            net_worth_history: portfolioHistory.map(record => {
+                return {
+                    price: record.Price,
+                    date: record.Date,
+                    user_id: USERID
+                }
+            })
         }
 
         try {
@@ -167,6 +177,11 @@
                 },
                 body: JSON.stringify(userMetrics)
             })
+
+            const data = await response.json()
+            if (response.ok) {
+                console.log("Metrics saved successfully", data)
+            }
         } catch (error) {
             console.error("Error saving metrics")
         }
