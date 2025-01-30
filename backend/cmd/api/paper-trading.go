@@ -75,6 +75,24 @@ func (h *Handler) handleSaveUserStats(c echo.Context) error {
 		h.DB.Model(&existingUser).Where("user_id = ?", userData.UserID).Updates(userData)
 	}
 
+	// for demo purposes, remove dates 'in the future'
+	var latestDate time.Time
+	if len(userData.NetWorthHistory) > 0 {
+		latestDate = userData.NetWorthHistory[len(userData.NetWorthHistory)-1].Date
+	}
+
+	if !latestDate.IsZero() {
+		if err := h.DB.Exec(`
+			DELETE FROM portfolio_records 
+			WHERE user_id = ? AND date > ?
+		`, userData.UserID, latestDate).Error; err != nil {
+			fmt.Printf("error deleting newer records: %s\n", err.Error())
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"error": "Failed to delete newer portfolio records",
+			})
+		}
+	}
+
 	// delete dupes
 	if err := h.DB.Exec(`
 		DELETE FROM portfolio_records 
