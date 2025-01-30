@@ -59,8 +59,8 @@
 
 
     // ASSETS 
-    let cash = data.cash ?? 100000
-    let position = data.position ?? 0
+    let cash = data.cash
+    let position = data.position
     let quantity: number
     $: currValue = displayedRecords.at(-1)?.Price ?? 0
     $: orderValue = quantity * targetPrice
@@ -197,7 +197,10 @@
     // TODO
 
     // add feature to cancel orders, view orders
-    // add state to the app that's persisted beyond refresh
+    // find peaks and bottoms
+    // display userid and allow for different users
+    // implement logging in with simple password protection (store passwords as encrypted versions in sqlite db)
+    // 
 </script>
 
 <div class="w-full flex flex-col items-center justify-center h-screen">
@@ -245,11 +248,11 @@
         <div class="flex flex-col justify-center items-center">
             <div class="w-1/2 flex justify-between mb-4 border-2 border-dotted p-4">
                 <div class="flex flex-col w-3/4">
-                    <input type="number" class="input" bind:value={quantity} placeholder="quantity">
-                    <input type="number" class="input" bind:value={targetPrice} placeholder="order price">                    
-                    <p class="w-full">Order Value: {orderValue.toFixed(2)}</p>
-                    <p class="w-full">New Position: {newPosition.toFixed(2)}</p>
-                    <p class="w-full">Cash Balance: {newCashBalance.toFixed(2)}</p>
+                    <input type="number" class="input mb-2" bind:value={quantity} placeholder="quantity">
+                    <input type="number" class="input mb-2" bind:value={targetPrice} placeholder="order price">                    
+                    <p class="w-full">Order Value: {!isNaN(orderValue) ? orderValue.toFixed(2) : 0}</p>
+                    <p class="w-full">New Position: {!isNaN(newPosition) ? newPosition.toFixed(2): position}</p>
+                    <p class="w-full">Cash Balance: {!isNaN(newCashBalance) ? newCashBalance.toFixed(2): cash.toFixed(2)}</p>
                 </div>
                 <button class="w-20 btn variant-ghost-error h-12" on:click={() => {popUpOpen = false}}>Cancel</button>
             </div>

@@ -128,14 +128,20 @@ func (h *Handler) handleSaveUserStats(c echo.Context) error {
 		})
 	}
 
-	for _, record := range userData.NetWorthHistory {
-        record.UserID = userData.UserID
-        if err := h.DB.Create(&record).Error; err != nil {
-            return c.JSON(http.StatusInternalServerError, echo.Map{
-                "error": "Failed to save portfolio record",
-            })
-        }
-    }
+	if len(userData.NetWorthHistory) > 0 {
+		for i := 0; i < len(userData.NetWorthHistory); i += 100 { // Batch size 100
+			end := i + 100
+			if end > len(userData.NetWorthHistory) {
+				end = len(userData.NetWorthHistory)
+			}
+			batch := userData.NetWorthHistory[i:end]
+			if err := h.DB.CreateInBatches(batch, 100).Error; err != nil {
+				return c.JSON(http.StatusInternalServerError, echo.Map{
+					"error": "Failed to save portfolio records",
+				})
+			}
+		}
+	}
 
 	return c.JSON(200, echo.Map{
 		"message":   "user stats saved",

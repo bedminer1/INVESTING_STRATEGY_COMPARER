@@ -9,13 +9,11 @@ export const load = async ({ fetch }) => {
         const userID = data.user_info.user_id
         const cash = data.user_info.cash
         const position = data.user_info.position
-        let portfolioHistory: PriceRecord[] = []
-        for (let record of data.user_info.net_worth_history) {
-            portfolioHistory.push({
-                Price: record.price,
-                Date: new Date(record.date)
-            })
-        }
+        // @ts-ignore
+        let portfolioHistory: PriceRecord[] = data.user_info.net_worth_history.map(record => ({
+            Price: record.price,
+            Date: new Date(record.date)
+        })).sort((a: any, b: any) => a.Date - b.Date)
         console.log("Fetched Cash:", cash, 
             "\nFetched Position: ", position)
 
