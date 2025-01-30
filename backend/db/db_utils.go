@@ -56,3 +56,11 @@ func GetCSV(filename string) []models.Record {
 
 	return res
 }
+
+func GetRecordIDs(records []models.PortfolioRecord) []uint {
+	ids := []uint{}
+	for _, record := range records {
+		ids = append(ids, record.ID)
+	}
+	return ids
+}

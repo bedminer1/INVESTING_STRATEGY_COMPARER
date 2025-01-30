@@ -75,6 +75,50 @@ func (h *Handler) handleSaveUserStats(c echo.Context) error {
 		h.DB.Model(&existingUser).Where("user_id = ?", userData.UserID).Updates(userData)
 	}
 
+	// delete dupes
+	if err := h.DB.Exec(`
+		DELETE FROM portfolio_records 
+		WHERE id NOT IN (
+			SELECT MIN(id) 
+			FROM portfolio_records 
+			WHERE user_id = ? 
+			GROUP BY date
+		) AND user_id = ?
+	`, userData.UserID, userData.UserID).Error; err != nil {
+		fmt.Printf("error deleting duplicate dates: %s\n", err.Error())
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Failed to delete duplicate dates",
+		})
+	}
+
+	// delete older records (out of top 500)
+	if err := h.DB.Exec(`
+        DELETE FROM portfolio_records 
+        WHERE user_id = ? 
+        AND id NOT IN (
+            SELECT id FROM (
+                SELECT id FROM portfolio_records 
+                WHERE user_id = ? 
+                ORDER BY date DESC 
+                LIMIT 2600
+            ) as subquery
+        )
+    `, userData.UserID, userData.UserID).Error; err != nil {
+		fmt.Printf("error deleting older records: %s\n", err.Error())
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Failed to delete older portfolio records",
+		})
+	}
+
+	for _, record := range userData.NetWorthHistory {
+        record.UserID = userData.UserID
+        if err := h.DB.Create(&record).Error; err != nil {
+            return c.JSON(http.StatusInternalServerError, echo.Map{
+                "error": "Failed to save portfolio record",
+            })
+        }
+    }
+
 	return c.JSON(200, echo.Map{
 		"message":   "user stats saved",
 		"user_info": userData,

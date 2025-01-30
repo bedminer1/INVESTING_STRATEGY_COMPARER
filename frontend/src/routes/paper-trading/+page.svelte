@@ -35,7 +35,6 @@
 
    
     const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
-    let start = records.at(-30)?.Date as Date ?? new Date(2015, 0, 27)
     let currDate = records.at(-1)?.Date as Date ?? new Date(2015, 0, 27)
     let curr = formatDate(currDate)
     let windowLength = 30
@@ -177,11 +176,6 @@
                 },
                 body: JSON.stringify(userMetrics)
             })
-
-            const data = await response.json()
-            if (response.ok) {
-                console.log("Metrics saved successfully", data)
-            }
         } catch (error) {
             console.error("Error saving metrics")
         }
