@@ -1,8 +1,14 @@
 <script lang="ts">
     import LineChart from "$lib/components/LineChart.svelte"
-    import { onDestroy } from "svelte";
+    import { onMount, onDestroy } from "svelte";
     import Card from "$lib/components/Card.svelte";
 
+    export let data: {
+        userID: string
+        cash: number,
+        position: number
+        portfolioHistory: PriceRecord[]
+    }
     let records: PriceRecord[] = []
     let frequencyMode = "fast-paper-trading"
 
@@ -26,9 +32,14 @@
         }
     }
 
-    const interval = setInterval(fetchRecords, 1000)
-    onDestroy(() => {
-        clearInterval(interval)
+    onMount(() => {
+        fetchRecords()
+
+        const interval = setInterval(fetchRecords, 1000)
+
+        onDestroy(() => {
+            clearInterval(interval)
+        })
     })
 
     let displayedRecords: PriceRecord[] = []
@@ -48,8 +59,8 @@
 
 
     // ASSETS 
-    let cash = 100000
-    let position = 0
+    let cash = data.cash ?? 100000
+    let position = data.position ?? 0
     let quantity: number
     $: currValue = displayedRecords.at(-1)?.Price ?? 0
     $: orderValue = quantity * targetPrice
@@ -59,7 +70,7 @@
     // PORTFOLIO HISTORY
     let showHistory = false
     let showPerformanceHistory = false
-    let portfolioHistory: PriceRecord[] = []
+    let portfolioHistory: PriceRecord[] = data.portfolioHistory ?? []
     let displayedPortfolioHistory: PriceRecord[] = []
     let performance: number = 0
     let performanceHistory: PriceRecord[] = []
@@ -79,8 +90,11 @@
                 Price: netWorth,
                 Date: currDate
             }
-            portfolioHistory = [...portfolioHistory, newRecord].slice(-windowLength)
+            portfolioHistory = [...portfolioHistory, newRecord]
+            displayedPortfolioHistory = portfolioHistory.slice(-windowLength)
         }
+
+        saveMetric()
     }
 
     // UPDATE performance history
@@ -89,10 +103,9 @@
             const latestPrice = portfolioHistory.at(-1)?.Price ?? 0
             const initialPrice = portfolioHistory[0]?.Price ?? 1
             performance = ((latestPrice - initialPrice) / initialPrice) * 100
-            performanceHistory = [...performanceHistory, { Price: performance, Date: currDate }].slice(-windowLength)
+            performanceHistory = [...performanceHistory, { Price: performance, Date: currDate }]
+            displayedPerformanceHistory = performanceHistory.slice(-windowLength)
         }
-
-        saveMetric()
     }
 
     $: {
