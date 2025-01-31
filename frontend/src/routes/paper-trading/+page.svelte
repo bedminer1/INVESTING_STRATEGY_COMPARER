@@ -75,6 +75,7 @@
     let performance: number = 0
     let performanceHistory: PriceRecord[] = []
     let displayedPerformanceHistory: PriceRecord[] = []
+    let transactionHistory: OrderRecord[] = []
     
     // UPDATE stock data and portfolio stats
     $: {
@@ -144,7 +145,8 @@
             Price: targetPrice,
             Date: currDate,
             Quantity: quantity,
-            IsBuyOrder: orderModeIsBuy
+            IsBuyOrder: orderModeIsBuy,
+            ExecutedOrder: false
         }
         orders = [...orders, order]
         console.log("Added Order: ", order)
@@ -162,7 +164,9 @@
             marketValue -= orderValue
             position -= order.Quantity
         }
+        order.ExecutedOrder = true
         console.log("Executed order: ", order, "Curr Value: ", currValue)
+        transactionHistory = [...transactionHistory, order]
     }
 
     const USERID = "bed"
@@ -196,11 +200,13 @@
 
     // TODO
 
+    // transaction history
     // add feature to cancel orders, view orders
     // find peaks and bottoms
     // display userid and allow for different users
     // implement logging in with simple password protection (store passwords as encrypted versions in sqlite db)
-    // 
+    // implement auto trader to dca for you, could also offer auto value averaging
+
 </script>
 
 <div class="w-full flex flex-col items-center justify-center h-screen">
@@ -259,7 +265,7 @@
             <button on:click={addOrder} class="btn variant-ghost-primary w-1/4">Submit Order</button>
         </div>
     </div>
-    <div class="flex gap-4">
+    <div class="flex gap-4 mb-5">
         <Card 
             {...{
                 title: "Net Worth",
@@ -292,5 +298,8 @@
                 icon: "&#9814;"
             }}
         />
+    </div>
+    <div>
+        <p>{JSON.stringify(transactionHistory)}</p>
     </div>
 </div>

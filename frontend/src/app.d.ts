@@ -38,4 +38,5 @@ interface OrderRecord {
 	Date: Date
 	Quantity: number
 	IsBuyOrder: boolean
+	ExecutedOrder: boolean
 }
